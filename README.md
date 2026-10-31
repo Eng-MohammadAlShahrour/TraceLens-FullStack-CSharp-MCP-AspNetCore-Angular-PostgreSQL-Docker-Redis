@@ -191,4 +191,4 @@ MIT © 2026 Mohammad Al-Shahrour
 
 ---
 
-*Built with C# / ASP.NET Core, Angular, PostgreSQL*
+*Built with C# / ASP.NET Core, Angular, PostgreSQL.*
