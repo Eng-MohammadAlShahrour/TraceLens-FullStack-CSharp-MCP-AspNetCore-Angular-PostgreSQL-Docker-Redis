@@ -1,4 +1,4 @@
-﻿# TraceLens
+# TraceLens
 
 **Enterprise Manufacturing Batch Traceability Platform**
 
@@ -26,17 +26,12 @@ TraceLens is a full-stack, production-grade platform for manufacturing batch tra
 ## Features
 
 ### Batch State Machine
-Created ──► InProduction ──► QCPassed ──► Shipped
-│ │
-└──► QCPending ┘
-│
-└──► QCFailed ──► Quarantined
-
-text
 
 - **8 states** with guarded transitions
 - **Business rules** enforced in `Batch` aggregate (no invalid transition possible)
 - **Domain events** raised at every important transition
+
+States: Created → InProduction → QCPending → QCPassed → Shipped. Alternative branches: QCFailed and Quarantined.
 
 ### Material Traceability
 
@@ -73,65 +68,22 @@ text
 ---
 
 ## Architecture
-┌────────────────────────────────────────────────────────────┐
-│ TraceLens.API │
-│ ASP.NET Core 10 · Controllers · OpenAPI · Serilog │
-│ GlobalExceptionMiddleware · CORS · Swagger UI │
-│ [Planned] OpenIddict OAuth 2.0 Server │
-└──────────────────────────┬─────────────────────────────────┘
-│
-┌──────────────────────────▼─────────────────────────────────┐
-│ TraceLens.Infrastructure │
-│ EF Core 10 · Npgsql · ApplicationDbContext │
-│ Per-entity configurations · Migrations │
-└──────────────────────────┬─────────────────────────────────┘
-│
-┌──────────────────────────▼─────────────────────────────────┐
-│ TraceLens.Application │
-│ CQRS · MediatR 14 · FluentValidation 12 │
-│ IApplicationDbContext · Pipeline behaviors │
-└──────────────────────────┬─────────────────────────────────┘
-│
-┌──────────────────────────▼─────────────────────────────────┐
-│ TraceLens.Domain │
-│ Aggregates · Value Objects · Enums · Domain Events │
-│ Pure C# — no external dependencies except MediatR │
-└────────────────────────────────────────────────────────────┘
 
-text
+### 4-Layer Clean Architecture
 
-### Layered Backend
-TraceLens.Domain
-├── Common/ BaseEntity · AggregateRoot · IDomainEvent
-├── Entities/ Batch · MaterialLot · WorkOrder
-├── Enums/ BatchStatus · QualityCheckResult · MaterialType
-├── ValueObjects/ BatchNumber · Quantity
-└── Events/ BatchCreated · QualityCheckPassed · BatchQuarantined
+- **Domain** — Aggregates, Value Objects, Enums, Domain Events. Pure C#, no external dependencies except MediatR.
+- **Application** — CQRS, MediatR handlers, FluentValidation, DTOs.
+- **Infrastructure** — EF Core 10, Npgsql, ApplicationDbContext, per-entity configurations, migrations.
+- **API** — ASP.NET Core 10 controllers, OpenAPI, Serilog, global exception middleware.
+- **[Planned] Auth** — OpenIddict OAuth 2.0 server embedded in the API.
 
-TraceLens.Application
-├── Common/
-│ ├── Interfaces/ IApplicationDbContext
-│ └── Behaviors/ ValidationBehavior<,>
-└── Features/
-└── Batches/
-├── CreateBatch/ Command + Handler + Validator + Response
-├── GetBatchById/ Query + Handler + DTO
-└── GetBatchesList/ Query + Handler + Response
+### Repository Layout
 
-TraceLens.Infrastructure
-├── Persistence/
-│ ├── ApplicationDbContext
-│ ├── Configurations/ Batch · MaterialLot · WorkOrder
-│ └── Migrations/
-└── DependencyInjection
-
-TraceLens.API
-├── Controllers/ BatchesController
-├── Middleware/ GlobalExceptionMiddleware
-├── appsettings.json
-└── Program.cs
-
-text
+- `src/TraceLens.Domain/` — Common, Entities, Enums, ValueObjects, Events
+- `src/TraceLens.Application/` — Common, Features/Batches (CreateBatch, GetBatchById, GetBatchesList)
+- `src/TraceLens.Infrastructure/` — Persistence, Configurations, Migrations
+- `src/TraceLens.API/` — Controllers, Middleware, Program.cs
+- `tests/TraceLens.Tests/` — xUnit + FluentAssertions
 
 ### Database Schema
 
@@ -307,4 +259,4 @@ Container	Docker Compose
 License
 MIT © 2026 Mohammad Al-Shahrour
 
-Built with C# / ASP.NET Core, Angular, PostgreSQL.
+Built with C# / ASP.NET Core, Angular, PostgreSQL
