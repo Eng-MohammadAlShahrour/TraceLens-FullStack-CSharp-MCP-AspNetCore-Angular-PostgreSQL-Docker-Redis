@@ -26,14 +26,21 @@ TraceLens is a full-stack, production-grade platform for manufacturing batch tra
 ## Features
 
 ### Batch State Machine
+Created ──► InProduction ──► QCPassed ──► Shipped
+│ │
+└──► QCPending ┘
+│
+└──► QCFailed ──► Quarantined
 
-- 8 states with guarded transitions
-- Business rules enforced in `Batch` aggregate (no invalid transition possible)
-- Domain events raised at every important transition
+text
+
+- **8 states** with guarded transitions
+- **Business rules** enforced in `Batch` aggregate (no invalid transition possible)
+- **Domain events** raised at every important transition
 
 ### Material Traceability
 
-- Each batch records every material lot it consumed
+- Each batch records every **material lot** it consumed
 - Material lots carry `LotNumber`, `SupplierId`, `MaterialType` (Raw / Component / Packaging), and `CertificateOfAnalysis`
 - Enforced: cannot add materials after production ends
 
@@ -51,46 +58,89 @@ TraceLens is a full-stack, production-grade platform for manufacturing batch tra
 
 ### Clean Architecture
 
-- 4 layers: Domain -> Application -> Infrastructure -> API
-- CQRS with MediatR for every feature
-- FluentValidation pipeline behavior (auto-validates every command)
-- Rich Domain Model (not anemic — behavior lives in entities)
+- **4 layers**: Domain → Application → Infrastructure → API
+- **CQRS** with MediatR for every feature
+- **FluentValidation** pipeline behavior (auto-validates every command)
+- **Rich Domain Model** (not anemic — behavior lives in entities)
 
 ### Observability
 
-- Serilog structured logging (JSON output)
-- OpenAPI auto-generated docs (Microsoft.AspNetCore.OpenApi)
-- Swagger UI for interactive testing
+- **Serilog** structured logging (JSON output)
+- **OpenAPI** auto-generated docs (Microsoft.AspNetCore.OpenApi)
+- **Swagger UI** for interactive testing
 - Global exception middleware with typed error responses
 
 ---
 
 ## Architecture
+┌────────────────────────────────────────────────────────────┐
+│ TraceLens.API │
+│ ASP.NET Core 10 · Controllers · OpenAPI · Serilog │
+│ GlobalExceptionMiddleware · CORS · Swagger UI │
+│ [Planned] OpenIddict OAuth 2.0 Server │
+└──────────────────────────┬─────────────────────────────────┘
+│
+┌──────────────────────────▼─────────────────────────────────┐
+│ TraceLens.Infrastructure │
+│ EF Core 10 · Npgsql · ApplicationDbContext │
+│ Per-entity configurations · Migrations │
+└──────────────────────────┬─────────────────────────────────┘
+│
+┌──────────────────────────▼─────────────────────────────────┐
+│ TraceLens.Application │
+│ CQRS · MediatR 14 · FluentValidation 12 │
+│ IApplicationDbContext · Pipeline behaviors │
+└──────────────────────────┬─────────────────────────────────┘
+│
+┌──────────────────────────▼─────────────────────────────────┐
+│ TraceLens.Domain │
+│ Aggregates · Value Objects · Enums · Domain Events │
+│ Pure C# — no external dependencies except MediatR │
+└────────────────────────────────────────────────────────────┘
 
-### 4-Layer Clean Architecture
+text
 
-- **Domain** — Aggregates, Value Objects, Enums, Domain Events. Pure C#, no external dependencies except MediatR.
-- **Application** — CQRS, MediatR handlers, FluentValidation, DTOs.
-- **Infrastructure** — EF Core 10, Npgsql, ApplicationDbContext, per-entity configurations, migrations.
-- **API** — ASP.NET Core 10 controllers, OpenAPI, Serilog, global exception middleware.
-- **[Planned] Auth** — OpenIddict OAuth 2.0 server embedded in the API.
+### Layered Backend
+TraceLens.Domain
+├── Common/ BaseEntity · AggregateRoot · IDomainEvent
+├── Entities/ Batch · MaterialLot · WorkOrder
+├── Enums/ BatchStatus · QualityCheckResult · MaterialType
+├── ValueObjects/ BatchNumber · Quantity
+└── Events/ BatchCreated · QualityCheckPassed · BatchQuarantined
 
-### Repository Layout
+TraceLens.Application
+├── Common/
+│ ├── Interfaces/ IApplicationDbContext
+│ └── Behaviors/ ValidationBehavior<,>
+└── Features/
+└── Batches/
+├── CreateBatch/ Command + Handler + Validator + Response
+├── GetBatchById/ Query + Handler + DTO
+└── GetBatchesList/ Query + Handler + Response
 
-- `src/TraceLens.Domain/` — Common, Entities, Enums, ValueObjects, Events
-- `src/TraceLens.Application/` — Common, Features/Batches (CreateBatch, GetBatchById, GetBatchesList)
-- `src/TraceLens.Infrastructure/` — Persistence, Configurations, Migrations
-- `src/TraceLens.API/` — Controllers, Middleware, Program.cs
-- `tests/TraceLens.Tests/` — xUnit + FluentAssertions
+TraceLens.Infrastructure
+├── Persistence/
+│ ├── ApplicationDbContext
+│ ├── Configurations/ Batch · MaterialLot · WorkOrder
+│ └── Migrations/
+└── DependencyInjection
+
+TraceLens.API
+├── Controllers/ BatchesController
+├── Middleware/ GlobalExceptionMiddleware
+├── appsettings.json
+└── Program.cs
+
+text
 
 ### Database Schema
 
 | Table | Purpose |
 | :--- | :--- |
-| batches | Batch aggregate root (unique batch_number, status enum) |
-| material_lots | Material lots attached to batches (FK batch_id) |
-| work_orders | Work orders (unique order_number) |
-| __EFMigrationsHistory | EF Core migration tracking |
+| `batches` | Batch aggregate root (unique `batch_number`, status enum) |
+| `material_lots` | Material lots attached to batches (FK `batch_id`) |
+| `work_orders` | Work orders (unique `order_number`) |
+| `__EFMigrationsHistory` | EF Core migration tracking |
 
 ---
 
@@ -98,50 +148,58 @@ TraceLens is a full-stack, production-grade platform for manufacturing batch tra
 
 ### Prerequisites
 
-- .NET 10 SDK
-- Docker Desktop 4.x+ (with Compose V2)
-- Ports 5268 (API), 5433 (PostgreSQL) free
+- **.NET 10 SDK** ([download](https://dotnet.microsoft.com/download/dotnet/10.0))
+- **Docker Desktop 4.x+** (with Compose V2)
+- **Ports** 5268 (API), 5433 (PostgreSQL) free
 
 ### Run
 
 ```bash
 git clone https://github.com/Eng-MohammadAlShahrour/TraceLens-FullStack-CSharp-AspNetCore-Angular-PostgreSQL-Docker.git
 cd TraceLens-FullStack-CSharp-AspNetCore-Angular-PostgreSQL-Docker
+
 docker compose up -d
 dotnet ef database update --project src/TraceLens.Infrastructure --startup-project src/TraceLens.API
 dotnet run --project src/TraceLens.API
 Note: The container uses port 5433 on the host to avoid conflict with any locally-installed PostgreSQL on port 5432.
 
 URLs
-ServiceURL
-APIhttp://localhost:5268
-Swagger UIhttp://localhost:5268/swagger
-OpenAPI JSONhttp://localhost:5268/openapi/v1.json
+Service	URL
+API	http://localhost:5268
+Swagger UI	http://localhost:5268/swagger
+OpenAPI JSON	http://localhost:5268/openapi/v1.json
 API Reference
 Batches (/api/batches)
-MethodPathReturns
-POST/api/batches201 Created + CreateBatchResponse
-GET/api/batches/{id}200 OK + BatchDto
-GET/api/batches?page=1&pageSize=20200 OK + paginated list
+Method	Path	Body	Returns
+POST	/api/batches	{ batchNumber, workOrderId, productId, producedQuantity, producedQuantityUnit }	201 Created + CreateBatchResponse
+GET	/api/batches/{id}	—	200 OK + BatchDto
+GET	/api/batches?page=1&pageSize=20	—	200 OK + paginated list
 Sample Request
 bash
 curl -X POST http://localhost:5268/api/batches \
   -H "Content-Type: application/json" \
-  -d '{"batchNumber":"B-2026-001","workOrderId":"11111111-1111-1111-1111-111111111111","productId":"22222222-2222-2222-2222-222222222222","producedQuantity":100,"producedQuantityUnit":"pcs"}'
+  -d '{
+    "batchNumber": "B-2026-001",
+    "workOrderId": "11111111-1111-1111-1111-111111111111",
+    "productId":  "22222222-2222-2222-2222-222222222222",
+    "producedQuantity": 100,
+    "producedQuantityUnit": "pcs"
+  }'
 Error Responses
-StatusWhenBody
-400Validation fails{ type: "ValidationError", errors: {...} }
-400Domain rule violated{ type: "BadRequest", title: "..." }
-404Batch ID not found—
-500Unexpected error{ type: "ServerError", title: "..." }
+Status	When	Body
+400 Bad Request	Validation fails	{ type: "ValidationError", errors: { Field: [messages] } }
+400 Bad Request	Domain rule violated	{ type: "BadRequest", title: "..." }
+404 Not Found	Batch ID doesn't exist	—
+500 Internal Server Error	Unexpected error	{ type: "ServerError", title: "..." }
 Security & Authentication
 Current State (MVP)
 The API currently runs without authentication — this is intentional for the initial portfolio demo. Every endpoint is public.
 
 Planned: OAuth 2.0 with OpenIddict
-OpenIddict will be embedded in TraceLens.API as a full OAuth 2.0 / OpenID Connect authorization server. This is the recommended approach for .NET projects — it is free, open-source (Apache 2.0), and lets the entire identity layer live inside the same codebase.
+OpenIddict will be embedded in TraceLens.API as a full OAuth 2.0 / OpenID Connect authorization server. This is the recommended approach for .NET projects — it's free, open-source (Apache 2.0), and lets the entire identity layer live inside the same codebase.
 
 Why OpenIddict and not Duende IdentityServer?
+
 Duende requires a paid commercial license for production use
 
 OpenIddict is 100% free for both development and production
@@ -151,11 +209,11 @@ Both implement the same OAuth 2.0 / OIDC standards
 OpenIddict integrates natively with ASP.NET Core 10 Identity
 
 Planned endpoints
-EndpointPurpose
-POST /connect/tokenExchange credentials for tokens (PKCE)
-GET /connect/authorizeAuthorization endpoint (PKCE flow)
-POST /connect/revokeRevoke access / refresh tokens
-GET /connect/userinfoOIDC user info endpoint
+Endpoint	Purpose
+POST /connect/token	Exchange credentials for tokens (PKCE)
+GET /connect/authorize	Authorization endpoint (PKCE flow)
+POST /connect/revoke	Revoke access / refresh tokens
+GET /connect/userinfo	OIDC user info endpoint
 Planned security features
 PKCE (Proof Key for Code Exchange) — required for SPA clients
 
@@ -168,34 +226,40 @@ Short-lived access tokens (15 min) + long-lived refresh tokens
 Scoped permissions — batches:read, batches:write, batches:approve
 
 Other Security Measures (already in place)
-ConcernMitigation
-SQL injectionEF Core parameterized queries
-Mass assignmentExplicit CQRS commands
-Invalid stateRich Domain Model enforces invariants
-Error leakingGlobal exception middleware returns generic messages
-Secrets in codeappsettings.Development.json for dev only
-CORSExplicit origins (localhost:4200, localhost:3000)
+Concern	Mitigation
+SQL injection	EF Core parameterized queries
+Mass assignment	Explicit CQRS commands (no auto-binding to entities)
+Invalid state	Rich Domain Model enforces invariants
+Error leaking	Global exception middleware returns generic messages
+Secrets in code	appsettings.Development.json for dev only; .env for production
+CORS	Explicit origins (localhost:4200, localhost:3000)
 Design Decisions
 Why Clean Architecture (4 projects)?
-Testability + independence from frameworks. The Domain layer contains zero external dependencies (except MediatR for domain events). Business rules can be tested without EF Core, PostgreSQL, or ASP.NET Core.
+Testability + independence from frameworks. The Domain layer contains zero external dependencies (except MediatR's INotification for domain events). Business rules can be tested without EF Core, PostgreSQL, or ASP.NET Core.
 
 Why CQRS with MediatR?
-Commands and queries have different shapes. A CreateBatchCommand mutates state and returns an ID. A GetBatchesListQuery reads data and returns a paginated DTO. Separating them makes each handler small and testable in isolation.
+Commands and queries have different shapes. A CreateBatchCommand mutates state and returns an ID. A GetBatchesListQuery reads data and returns a paginated DTO. Separating them makes each handler small (~30 lines), testable in isolation, and easy to find.
 
 Why FluentValidation in a pipeline behavior?
-Validation is cross-cutting. Every command needs it. The ValidationBehavior runs before every handler automatically. Add a new validator — it is enforced. No changes to the handler.
+Validation is cross-cutting. Every command needs it, but nobody wants to call validator.Validate() in every handler. The ValidationBehavior<,> runs before every handler automatically.
 
 Why Rich Domain Model (not anemic)?
 Invalid state should be impossible. Batch.MarkQCCompleted(result) throws if the batch is still in Created state. You cannot accidentally ship an un-QC'd batch — the domain forbids it.
 
 Why Domain Events?
-Decoupling. When a batch passes QC, we might want to send an email, update a dashboard, or trigger a downstream process. Domain events let us add these without touching the Batch aggregate.
+Decoupling. When a batch passes QC, we might want to: send an email, update a dashboard, log to an external system, trigger a downstream process. Domain events let us add these without touching the Batch aggregate.
 
 Why Value Objects for BatchNumber and Quantity?
-Primitive obsession is a bug farm. string batchNumber can be empty or malformed. Quantity can be negative. By using BatchNumber.Create() and Quantity.Create(), invalid values are rejected at construction.
+Primitive obsession is a bug farm. string batchNumber can be empty, too long, or malformed. Quantity can be negative. By using BatchNumber.Create(...) and Quantity.Create(...), invalid values are rejected at construction.
 
 Why PostgreSQL (not SQL Server)?
-Cross-platform, JSONB support, pg_trgm for fuzzy search, open source, no licensing headaches.
+Cross-platform (dev on Windows, prod on Linux — no license)
+
+JSONB (for future metadata)
+
+pg_trgm (for future fuzzy search on material names)
+
+Open source, no licensing headaches
 
 Why Port 5433 for Docker?
 Coexistence with local PostgreSQL. Many developers have PostgreSQL installed on Windows (port 5432). Using 5433 lets TraceLens run alongside without conflict.
@@ -204,13 +268,13 @@ Testing
 The test project is scaffolded with xUnit + FluentAssertions + EF Core InMemory.
 
 Planned test suites
-SuiteTestsCoverage
-BatchTests~15All state transitions + guard conditions
-BatchNumberTests~5Validation, normalization, equality
-QuantityTests~5Negative rejection, unit normalization
-CreateBatchHandlerTests~3Happy path + validation failure
-GetBatchesListHandlerTests~3Pagination edge cases
-OAuthFlowTests~8PKCE, token exchange, refresh, revoke
+Suite	Tests	Coverage
+BatchTests	~15	All state transitions + guard conditions
+BatchNumberTests	~5	Validation, normalization, equality
+QuantityTests	~5	Negative rejection, unit normalization
+CreateBatchHandlerTests	~3	Happy path + validation failure
+GetBatchesListHandlerTests	~3	Pagination edge cases
+OAuthFlowTests	~8	PKCE, token exchange, refresh, revoke
 Roadmap
 ☑ Clean Architecture — 4 layers, DI, testable
 ☑ CQRS with MediatR — 3 features (Create, GetById, List)
@@ -221,26 +285,26 @@ Roadmap
 ☑ Docker Compose — PostgreSQL container, port isolation
 □ OAuth 2.0 with OpenIddict — authorization server, PKCE, RBAC, refresh tokens
 □ SignalR — real-time batch status updates
-□ Hangfire — QC reminders, stale batch alerts
+□ Hangfire — QC reminders, stale batch alerts, scheduled reports
 □ Redis — caching for dashboard aggregations
 □ Angular 20 frontend — Warm Dark + Violet design system
 □ Playwright E2E tests — full user journey
 Tech Stack
-LayerTechnology
-Runtime.NET 10 (LTS until Nov 2028)
-LanguageC# 14
-APIASP.NET Core 10, Controllers
-OpenAPIMicrosoft.AspNetCore.OpenApi 10
-Swagger UISwashbuckle.AspNetCore.SwaggerUI 10
-CQRSMediatR 14
-ValidationFluentValidation 12
-ORMEF Core 10
-DatabasePostgreSQL 16 (Alpine)
-LoggingSerilog
-Auth (planned)OpenIddict (OAuth 2.0 + OIDC)
-TestsxUnit, FluentAssertions, EF Core InMemory
-ContainerDocker Compose
+Layer	Technology
+Runtime	.NET 10 (LTS until Nov 2028)
+Language	C# 14
+API	ASP.NET Core 10, Controllers
+OpenAPI	Microsoft.AspNetCore.OpenApi 10
+Swagger UI	Swashbuckle.AspNetCore.SwaggerUI 10
+CQRS	MediatR 14
+Validation	FluentValidation 12
+ORM	EF Core 10
+Database	PostgreSQL 16 (Alpine)
+Logging	Serilog
+Auth (planned)	OpenIddict (OAuth 2.0 + OIDC)
+Tests	xUnit, FluentAssertions, EF Core InMemory
+Container	Docker Compose
 License
-MIT (c) 2026 Mohammad Al-Shahrour
+MIT © 2026 Mohammad Al-Shahrour
 
-Built with coffee and a healthy obsession with traceability.
+Built with C# / ASP.NET Core, Angular, PostgreSQL.
