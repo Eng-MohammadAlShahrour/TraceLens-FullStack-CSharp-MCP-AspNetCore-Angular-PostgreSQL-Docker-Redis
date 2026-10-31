@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using TraceLens.Domain.Entities;
 using TraceLens.Domain.Enums;
 using TraceLens.Domain.ValueObjects;
@@ -9,6 +9,19 @@ public static class DbSeeder
 {
     public static async Task SeedAsync(ApplicationDbContext context)
     {
+        // Work Orders
+        if (!await context.WorkOrders.AnyAsync())
+        {
+            var wo1 = WorkOrder.Create("WO-2026-001", Guid.Parse("22222222-2222-2222-2222-222222222222"), 100, DateTime.UtcNow.AddDays(30));
+            var wo2 = WorkOrder.Create("WO-2026-002", Guid.Parse("44444444-4444-4444-4444-444444444444"), 250, DateTime.UtcNow.AddDays(45));
+            var wo3 = WorkOrder.Create("WO-2026-003", Guid.Parse("66666666-6666-6666-6666-666666666666"), 80, DateTime.UtcNow.AddDays(15));
+            var wo4 = WorkOrder.Create("WO-2026-004", Guid.Parse("88888888-8888-8888-8888-888888888888"), 150, DateTime.UtcNow.AddDays(60));
+
+            context.WorkOrders.AddRange(wo1, wo2, wo3, wo4);
+            await context.SaveChangesAsync();
+        }
+
+        // Batches
         if (await context.Batches.AnyAsync())
             return;
 

@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Text.Json;
 using FluentValidation;
+using TraceLens.Application.Common.Exceptions;
 
 namespace TraceLens.API.Middleware;
 
@@ -37,6 +38,18 @@ public sealed class GlobalExceptionMiddleware
                 title = "One or more validation errors occurred.",
                 status = 400,
                 errors
+            }));
+        }
+        catch (DuplicateWorkOrderException dex)
+        {
+            _logger.LogWarning("Duplicate work order: {Message}", dex.Message);
+            context.Response.StatusCode = (int)HttpStatusCode.Conflict;
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsync(JsonSerializer.Serialize(new
+            {
+                type = "DuplicateWorkOrder",
+                title = dex.Message,
+                status = 409
             }));
         }
         catch (ArgumentException aex)
