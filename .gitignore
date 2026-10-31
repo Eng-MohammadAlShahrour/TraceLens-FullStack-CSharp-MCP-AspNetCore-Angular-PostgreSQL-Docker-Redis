@@ -1,0 +1,23 @@
+﻿## .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+.vscode/
+
+## Rider
+.idea/
+
+## Env
+.env
+.env.local
+
+## Node (للـ Angular لاحقاً)
+node_modules/
+dist/
+.angular/
+
+## OS
+.DS_Store
+Thumbs.db
