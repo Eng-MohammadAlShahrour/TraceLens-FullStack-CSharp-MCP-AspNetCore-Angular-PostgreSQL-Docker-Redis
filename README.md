@@ -1,8 +1,8 @@
-﻿# TraceLens
+# TraceLens
 
 **Manufacturing batch traceability — end to end**
 
-A full-stack **C# / ASP.NET Core 10 + Angular 20** platform that tracks every production batch — which raw material lots went into it, which quality checks it passed, and which customer received it. Strict state machine, full audit trail, domain events, and 59 automated tests.
+A full-stack **C# / ASP.NET Core 10 + Angular 20** platform that tracks every production batch — which raw material lots went into it, which quality checks it passed, and which customer received it. Strict state machine, full audit trail, domain events, and **59 automated tests**.
 
 [![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)](https://dotnet.microsoft.com)
 [![C#](https://img.shields.io/badge/C%23-14-239120?style=for-the-badge&logo=csharp&logoColor=white)](https://learn.microsoft.com/dotnet/csharp/)
@@ -34,18 +34,6 @@ A full-stack **C# / ASP.NET Core 10 + Angular 20** platform that tracks every pr
 
 ---
 
-## Screenshots
-
-| Dashboard | Batches List |
-| :---: | :---: |
-| ![Dashboard](docs/screenshots/dashboard.png) | ![Batches](docs/screenshots/batches.png) |
-
-| Create Batch | Batch Details |
-| :---: | :---: |
-| ![Create](docs/screenshots/create.png) | ![Details](docs/screenshots/details.png) |
-
----
-
 ## Quick Start
 
 **Prerequisites:** .NET 10 SDK, Node 20+, Docker Desktop 4.x+, Angular CLI 20+.
@@ -62,21 +50,21 @@ cd frontend
 npm install
 npm start
 URLs
-ServiceURL
-APIhttp://localhost:5268
-Swagger UIhttp://localhost:5268/swagger
-Angularhttp://localhost:4200
+Service	URL
+API	http://localhost:5268
+Swagger UI	http://localhost:5268/swagger
+Angular	http://localhost:4200
 Container uses port 5433 on the host to avoid conflict with any local PostgreSQL.
 
 Architecture
 4-Layer Clean Architecture
-LayerPurposeTech
-DomainAggregates, Value Objects, Enums, Domain EventsPure C#
-ApplicationCQRS commands/queries, MediatR handlers, FluentValidationMediatR 14
-InfrastructureApplicationDbContext, configurations, migrations, seederEF Core 10 + Npgsql
-APIControllers, middleware, OpenAPI, SerilogASP.NET Core 10
-FrontendDashboard, Batches, Create, DetailsAngular 20 + Tailwind v4
-[Planned] AuthOAuth 2.0 / OIDC authorization serverOpenIddict
+Layer	Purpose	Tech
+Domain	Aggregates, Value Objects, Enums, Domain Events	Pure C#
+Application	CQRS commands/queries, MediatR handlers, FluentValidation	MediatR 14
+Infrastructure	ApplicationDbContext, configurations, migrations, seeder	EF Core 10 + Npgsql
+API	Controllers, middleware, OpenAPI, Serilog	ASP.NET Core 10
+Frontend	Dashboard, Batches, Create, Details	Angular 20 + Tailwind v4
+[Planned] Auth	OAuth 2.0 / OIDC authorization server	OpenIddict
 Domain Model
 text
 Batch (AggregateRoot)
@@ -89,23 +77,23 @@ Batch (AggregateRoot)
 └── Domain Events (BatchCreated, QualityCheckPassed, BatchQuarantined)
 API Reference
 Batches (/api/batches) — 8 endpoints
-MethodPathDescription
-POST/api/batchesCreate a new batch
-GET/api/batches/{id}Get batch by ID
-GET/api/batches?page=1&pageSize=20Paginated list
-POST/api/batches/{id}/start-productionCreated → InProduction
-POST/api/batches/{id}/pass-qcInProduction → QCPassed
-POST/api/batches/{id}/fail-qcInProduction → QCFailed
-POST/api/batches/{id}/shipQCPassed → Shipped
-POST/api/batches/{id}/quarantineany → Quarantined (requires reason)
+Method	Path	Description
+POST	/api/batches	Create a new batch
+GET	/api/batches/{id}	Get batch by ID
+GET	/api/batches?page=1&pageSize=20	Paginated list
+POST	/api/batches/{id}/start-production	Created → InProduction
+POST	/api/batches/{id}/pass-qc	InProduction → QCPassed
+POST	/api/batches/{id}/fail-qc	InProduction → QCFailed
+POST	/api/batches/{id}/ship	QCPassed → Shipped
+POST	/api/batches/{id}/quarantine	any → Quarantined (requires reason)
 Testing — 59 tests passing
 bash
 dotnet test
-SuiteTestsCoverage
-Domain (Batch, BatchNumber, Quantity)31State transitions, guard conditions, ValueObject validation
-Application (Validators, Handlers)18CQRS commands, validation pipeline, pagination
-API (Controllers)6HTTP responses, mediator wiring
-Integration (SQLite)4OwnsOne round-trip, unique indexes, enum-as-string
+Suite	Tests	Coverage
+Domain (Batch, BatchNumber, Quantity)	31	State transitions, guard conditions, ValueObject validation
+Application (Validators, Handlers)	18	CQRS commands, validation pipeline, pagination
+API (Controllers)	6	HTTP responses, mediator wiring
+Integration (SQLite)	4	OwnsOne round-trip, unique indexes, enum-as-string
 Design Decisions
 Why Clean Architecture (4 projects)?
 Testability + independence from frameworks. Domain has zero external dependencies except MediatR. Business rules tested without EF Core, PostgreSQL, or ASP.NET Core.
@@ -126,21 +114,21 @@ Why Domain Events?
 Decoupling. When a batch passes QC, we can send an email, update a dashboard, or trigger a downstream process — without touching the Batch aggregate.
 
 Tech Stack
-LayerTechnology
-Runtime.NET 10 (LTS until Nov 2028)
-LanguageC# 14
-APIASP.NET Core 10, Controllers
-OpenAPIMicrosoft.AspNetCore.OpenApi 10 + Swashbuckle SwaggerUI
-CQRSMediatR 14
-ValidationFluentValidation 12
-ORMEF Core 10
-DatabasePostgreSQL 16 (Alpine)
-LoggingSerilog
-FrontendAngular 20 + Tailwind CSS v4 + Inter + JetBrains Mono
-Design SystemFresh Teal (Custom theme, mobile-first)
-Auth (planned)OpenIddict (OAuth 2.0 + OIDC)
-TestsxUnit, FluentAssertions, EF Core InMemory, SQLite
-ContainerDocker Compose
+Layer	Technology
+Runtime	.NET 10 (LTS until Nov 2028)
+Language	C# 14
+API	ASP.NET Core 10, Controllers
+OpenAPI	Microsoft.AspNetCore.OpenApi 10 + Swashbuckle SwaggerUI
+CQRS	MediatR 14
+Validation	FluentValidation 12
+ORM	EF Core 10
+Database	PostgreSQL 16 (Alpine)
+Logging	Serilog
+Frontend	Angular 20 + Tailwind CSS v4 + Inter + JetBrains Mono
+Design System	Fresh Teal (Custom theme, mobile-first)
+Auth (planned)	OpenIddict (OAuth 2.0 + OIDC)
+Tests	xUnit, FluentAssertions, EF Core InMemory, SQLite
+Container	Docker Compose
 Roadmap
 ☑ Clean Architecture — 4 layers, DI, testable
 ☑ CQRS with MediatR — 8 features
@@ -159,4 +147,4 @@ Roadmap
 License
 MIT © 2026 Mohammad Al-Shahrour
 
-Built with C# / ASP.NET Core, Angular, PostgreSQL — and an unhealthy obsession with traceability.
+Built with C# / ASP.NET Core, Angular, PostgreSQL
