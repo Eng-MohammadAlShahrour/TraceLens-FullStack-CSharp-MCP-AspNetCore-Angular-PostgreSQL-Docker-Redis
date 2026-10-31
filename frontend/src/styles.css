@@ -1,0 +1,213 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #F1F5F6;
+  --color-surface: #FFFFFF;
+  --color-elevated: #F1F5F6;
+  --color-subtle: #E2E8EA;
+
+  --color-brand-50:  #F0FDFA;
+  --color-brand-100: #CCFBF1;
+  --color-brand-200: #99F6E4;
+  --color-brand-300: #5EEAD4;
+  --color-brand-400: #2DD4BF;
+  --color-brand-500: #0F9B8E;
+  --color-brand-600: #0F766E;
+  --color-brand-700: #0F766E;
+  --color-brand-800: #115E59;
+
+  --color-cyan-400: #22D3EE;
+  --color-cyan-500: #0891B2;
+  --color-cyan-600: #0891B2;
+
+  --color-success: #10B981;
+  --color-warning: #F59E0B;
+  --color-danger:  #EF4444;
+  --color-info:    #06B6D4;
+
+  --color-ink-100: #0F172A;
+  --color-ink-300: #334155;
+  --color-ink-400: #64748B;
+  --color-ink-500: #94A3B8;
+
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', ui-monospace, monospace;
+}
+
+:root {
+  --bg: #F1F5F6;
+  --surface: #FFFFFF;
+  --elevated: #F1F5F6;
+  --subtle: #E2E8EA;
+  --brand: #0D9488;
+  --brand-hover: #0F766E;
+  --ink: #0F172A;
+  --ink-muted: #64748B;
+  --ink-faint: #94A3B8;
+}
+
+* { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+
+html, body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.55;
+  letter-spacing: -0.011em;
+  margin: 0;
+  padding: 0;
+}
+
+h1 { font-weight: 700; font-size: 1.75rem; letter-spacing: -0.03em; line-height: 1.2; }
+h2 { font-weight: 700; font-size: 1.375rem; letter-spacing: -0.025em; line-height: 1.3; }
+h3 { font-weight: 600; font-size: 1.125rem; letter-spacing: -0.02em; line-height: 1.4; }
+h4 { font-weight: 600; font-size: 1rem; letter-spacing: -0.015em; }
+
+@media (max-width: 768px) {
+  h1 { font-size: 1.5rem; }
+  h2 { font-size: 1.25rem; }
+  html, body { font-size: 13.5px; }
+}
+
+@layer components {
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0 1.125rem;
+    height: 2.5rem;
+    border-radius: 0.625rem;
+    background: linear-gradient(135deg, #0F766E 0%, #0891B2 100%);
+    color: white;
+    font-weight: 600;
+    font-size: 0.875rem;
+    letter-spacing: -0.005em;
+    transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 3px rgba(13,148,136,0.2), 0 1px 2px rgba(13,148,136,0.15);
+    white-space: nowrap;
+  }
+  .btn-primary:hover:not(:disabled) {
+    box-shadow: 0 6px 16px rgba(13,148,136,0.3), 0 2px 4px rgba(13,148,136,0.2);
+    transform: translateY(-1px);
+  }
+  .btn-primary:active:not(:disabled) { transform: translateY(0); }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0 1.125rem;
+    height: 2.5rem;
+    border-radius: 0.625rem;
+    background: var(--surface);
+    color: var(--ink);
+    font-weight: 500;
+    font-size: 0.875rem;
+    border: 1px solid var(--subtle);
+    transition: all 150ms;
+    white-space: nowrap;
+  }
+  .btn-secondary:hover { background: var(--elevated); border-color: #CBD5E1; }
+
+  .input {
+    width: 100%;
+    height: 2.5rem;
+    padding: 0 0.875rem;
+    border-radius: 0.625rem;
+    font-size: 0.875rem;
+    background: var(--surface);
+    color: var(--ink);
+    border: 1px solid var(--subtle);
+    outline: none;
+    transition: all 150ms;
+  }
+  .input:focus {
+    border-color: var(--brand);
+    box-shadow: 0 0 0 4px rgba(13,148,136,0.1);
+  }
+  .input::placeholder { color: var(--ink-faint); }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--subtle);
+    border-radius: 0.875rem;
+    padding: 1.25rem;
+    box-shadow: 0 1px 2px rgba(15,23,42,0.03);
+    transition: all 200ms;
+  }
+  .card:hover {
+    box-shadow: 0 4px 16px rgba(15,23,42,0.06);
+    border-color: #CBD5E1;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 0.5rem;
+    height: 1.375rem;
+    border-radius: 0.375rem;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+  .badge-success { background: rgba(16,185,129,0.12); color: #047857; }
+  .badge-warning { background: rgba(245,158,11,0.12); color: #B45309; }
+  .badge-danger  { background: rgba(239,68,68,0.12);  color: #B91C1C; }
+  .badge-info    { background: rgba(6,182,212,0.12);  color: #0E7490; }
+  .badge-neutral { background: rgba(15,23,42,0.06);   color: var(--ink-muted); }
+}
+
+/* Mobile: touch-friendly */
+@media (max-width: 768px) {
+  .btn-primary, .btn-secondary { height: 2.75rem; min-height: 44px; }
+  .input { height: 2.75rem; font-size: 16px; /* prevents iOS zoom */ }
+}
+
+.nav-link.active-nav {
+  background: linear-gradient(135deg, rgba(13,148,136,0.1) 0%, rgba(6,182,212,0.1) 100%);
+  color: #0F766E !important;
+  border: 1px solid rgba(13,148,136,0.2);
+  font-weight: 600;
+}
+.nav-link.active-nav svg { color: #0D9488; }
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in { animation: fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.4); }
+}
+.pulse-dot { animation: pulse-dot 2s ease-in-out infinite; }
+
+@keyframes slideIn {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+.slide-in { animation: slideIn 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(15,23,42,0.15); border-radius: 5px; border: 2px solid var(--bg); }
+::-webkit-scrollbar-thumb:hover { background: rgba(15,23,42,0.25); }
+
+/* Tailwind v4: buttons need explicit cursor */
+@layer base {
+  button,
+  [role="button"],
+  a {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: not-allowed;
+  }
+}

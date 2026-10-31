@@ -11,7 +11,9 @@
     <PackageReference Include="coverlet.collector" Version="6.0.2" />
     <PackageReference Include="FluentAssertions" Version="8.11.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.14" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.14" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageReference Include="NSubstitute" Version="6.2.0" />
     <PackageReference Include="xunit" Version="2.9.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
   </ItemGroup>
@@ -23,6 +25,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\TraceLens.Application\TraceLens.Application.csproj" />
     <ProjectReference Include="..\..\src\TraceLens.Infrastructure\TraceLens.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\TraceLens.API\TraceLens.API.csproj" />
   </ItemGroup>
 
 </Project>

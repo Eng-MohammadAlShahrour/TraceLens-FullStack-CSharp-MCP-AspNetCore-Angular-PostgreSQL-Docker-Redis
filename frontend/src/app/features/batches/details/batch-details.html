@@ -1,0 +1,133 @@
+﻿<div class="p-4 md:p-8 animate-fade-in max-w-3xl mx-auto">
+  <header class="mb-8">
+    <a routerLink="/batches" class="text-xs font-semibold text-ink-400 hover:text-brand-600 inline-flex items-center gap-1 mb-3">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      Back to Batches
+    </a>
+
+    @if (loading()) {
+      <div class="card flex items-center justify-center py-12">
+        <p class="text-sm text-ink-400">Loading batch...</p>
+      </div>
+    } @else if (error()) {
+      <div class="card text-center py-12">
+        <p class="text-danger text-sm mb-4">{{ error() }}</p>
+        <button (click)="load()" class="btn-secondary">Try again</button>
+      </div>
+    } @else if (batch(); as b) {
+      <div class="flex items-start justify-between mb-6 gap-3">
+        <div class="min-w-0">
+          <h1 class="text-2xl md:text-3xl font-bold text-ink-100 tracking-tight font-mono break-all">{{ b.batchNumber }}</h1>
+          <p class="text-sm text-ink-400 mt-1">{{ b.producedQuantity }} {{ b.producedQuantityUnit }}</p>
+        </div>
+        <span [class]="statusBadge()" class="shrink-0">{{ statusLabel() }}</span>
+      </div>
+
+      <div class="card mb-6">
+        <h2 class="text-sm font-bold text-ink-100 mb-4 uppercase tracking-wider">Details</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+          <div>
+            <p class="text-xs text-ink-400 mb-0.5">Work Order ID</p>
+            <p class="font-mono text-xs text-ink-100 break-all">{{ b.workOrderId }}</p>
+          </div>
+          <div>
+            <p class="text-xs text-ink-400 mb-0.5">Product ID</p>
+            <p class="font-mono text-xs text-ink-100 break-all">{{ b.productId }}</p>
+          </div>
+          <div>
+            <p class="text-xs text-ink-400 mb-0.5">Created</p>
+            <p class="text-ink-300">{{ b.createdAt | date:'medium' }}</p>
+          </div>
+          <div>
+            <p class="text-xs text-ink-400 mb-0.5">Started</p>
+            <p class="text-ink-300">{{ b.startedAt ? (b.startedAt | date:'medium') : '—' }}</p>
+          </div>
+          <div>
+            <p class="text-xs text-ink-400 mb-0.5">Completed</p>
+            <p class="text-ink-300">{{ b.completedAt ? (b.completedAt | date:'medium') : '—' }}</p>
+          </div>
+          @if (b.notes) {
+            <div class="sm:col-span-2">
+              <p class="text-xs text-ink-400 mb-0.5">Notes</p>
+              <p class="text-ink-300">{{ b.notes }}</p>
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="card mb-6">
+        <h2 class="text-sm font-bold text-ink-100 mb-4 uppercase tracking-wider">Timeline</h2>
+        <div class="flex items-center gap-1">
+          <div class="flex-1 h-1 rounded-full" [class]="['Created','InProduction','QCPassed','QCFailed','Shipped','Quarantined'].includes(b.status) ? 'bg-brand-600' : 'bg-subtle'"></div>
+          <div class="flex-1 h-1 rounded-full" [class]="['InProduction','QCPassed','QCFailed','Shipped'].includes(b.status) ? 'bg-success' : 'bg-subtle'"></div>
+          <div class="flex-1 h-1 rounded-full" [class]="['QCPassed','QCFailed','Shipped'].includes(b.status) ? 'bg-success' : 'bg-subtle'"></div>
+          <div class="flex-1 h-1 rounded-full" [class]="b.status === 'Shipped' ? 'bg-success' : 'bg-subtle'"></div>
+        </div>
+        <div class="flex justify-between mt-2 text-xs text-ink-400">
+          <span>Created</span>
+          <span>In Production</span>
+          <span>QC</span>
+          <span>Shipped</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="text-sm font-bold text-ink-100 mb-4 uppercase tracking-wider">Actions</h2>
+        <div class="flex flex-wrap gap-2">
+          @if (b.status === 'Created') {
+            <button (click)="startProduction()" [disabled]="acting()" class="btn-primary">Start Production</button>
+          }
+          @if (b.status === 'InProduction') {
+            <button (click)="passQC()" [disabled]="acting()" class="btn-primary">Pass QC</button>
+            <button (click)="failQC()" [disabled]="acting()" class="btn-secondary">Fail QC</button>
+          }
+          @if (b.status === 'QCPassed') {
+            <button (click)="ship()" [disabled]="acting()" class="btn-primary">Ship</button>
+          }
+          @if (b.status !== 'Shipped' && b.status !== 'Quarantined') {
+            <button (click)="openQuarantine()" [disabled]="acting()" class="btn-secondary">Quarantine</button>
+          }
+          @if (b.status === 'Shipped' || b.status === 'Quarantined') {
+            <p class="text-sm text-ink-400">No actions available (terminal state)</p>
+          }
+        </div>
+      </div>
+    }
+  </header>
+
+  @if (showQuarantineModal()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-100/50 backdrop-blur-sm" (click)="closeQuarantine()">
+      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 animate-fade-in" (click)="$event.stopPropagation()">
+        <div class="flex items-start gap-3 mb-4">
+          <div class="w-10 h-10 rounded-full bg-danger/10 flex items-center justify-center shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-ink-100">Quarantine Batch</h3>
+            <p class="text-sm text-ink-400 mt-0.5">Please provide a reason for quarantining this batch.</p>
+          </div>
+        </div>
+
+        <label class="block text-xs font-semibold text-ink-300 uppercase tracking-wider mb-1.5">Reason *</label>
+        <textarea
+          [ngModel]="quarantineReason()"
+          (ngModelChange)="quarantineReason.set($event)"
+          rows="3"
+          placeholder="e.g., Dimension out of tolerance"
+          class="input resize-none h-auto py-2"
+        ></textarea>
+
+        @if (quarantineError()) {
+          <p class="text-xs text-danger mt-1.5">{{ quarantineError() }}</p>
+        }
+
+        <div class="flex items-center justify-end gap-2 mt-6">
+          <button (click)="closeQuarantine()" class="btn-secondary">Cancel</button>
+          <button (click)="confirmQuarantine()" [disabled]="acting()" class="btn-primary bg-danger hover:bg-red-600">
+            @if (acting()) { Quarantining... } @else { Confirm Quarantine }
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

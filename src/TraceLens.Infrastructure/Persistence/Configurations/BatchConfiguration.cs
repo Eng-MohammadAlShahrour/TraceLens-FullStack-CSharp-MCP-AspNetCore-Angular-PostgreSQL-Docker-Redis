@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using TraceLens.Domain.Entities;
 using TraceLens.Domain.ValueObjects;
@@ -13,21 +13,24 @@ public sealed class BatchConfiguration : IEntityTypeConfiguration<Batch>
         builder.HasKey(b => b.Id);
 
         builder.Property(b => b.BatchNumber)
-            .HasConversion(
-                v => v.Value,
-                v => BatchNumber.Create(v))
+            .HasConversion(v => v.Value, v => BatchNumber.Create(v))
             .HasColumnName("batch_number")
             .HasMaxLength(50)
             .IsRequired();
 
         builder.HasIndex(b => b.BatchNumber).IsUnique();
 
-        builder.Property(b => b.ProducedQuantity)
-            .HasConversion(
-                v => v.Value,
-                v => Quantity.Create(v, "unit"))
-            .HasColumnName("produced_quantity")
-            .HasPrecision(18, 4);
+        builder.OwnsOne(b => b.ProducedQuantity, q =>
+        {
+            q.Property(x => x.Value)
+                .HasColumnName("produced_quantity_value")
+                .HasPrecision(18, 4)
+                .IsRequired();
+            q.Property(x => x.Unit)
+                .HasColumnName("produced_quantity_unit")
+                .HasMaxLength(20)
+                .IsRequired();
+        });
 
         builder.Property(b => b.Status)
             .HasConversion<string>()
@@ -36,7 +39,6 @@ public sealed class BatchConfiguration : IEntityTypeConfiguration<Batch>
             .IsRequired();
 
         builder.Property(b => b.Notes).HasMaxLength(1000);
-
         builder.Property(b => b.CreatedAt).HasColumnName("created_at");
         builder.Property(b => b.UpdatedAt).HasColumnName("updated_at");
         builder.Property(b => b.StartedAt).HasColumnName("started_at");

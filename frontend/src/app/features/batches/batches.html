@@ -1,0 +1,75 @@
+﻿<div class="p-4 md:p-8 animate-fade-in">
+  <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 md:mb-8">
+    <div>
+      <h1 class="text-2xl md:text-3xl font-bold text-ink-100 tracking-tight">Batches</h1>
+      <p class="text-sm text-ink-400 mt-1.5">Manage all production batches</p>
+    </div>
+    <a routerLink="/batches/new" class="btn-primary w-full sm:w-auto">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M12 5v14M5 12h14"/></svg>
+      New Batch
+    </a>
+  </header>
+
+  @if (loading()) {
+    <div class="card flex items-center justify-center py-16">
+      <div class="flex flex-col items-center gap-3">
+        <svg class="animate-spin w-8 h-8 text-brand-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+        <p class="text-sm text-ink-400">Loading batches...</p>
+      </div>
+    </div>
+  } @else if (error()) {
+    <div class="card flex items-center justify-center py-16">
+      <div class="flex flex-col items-center gap-3 text-center">
+        <div class="w-12 h-12 rounded-full bg-danger/10 flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </div>
+        <p class="text-sm text-ink-300 font-medium">{{ error() }}</p>
+        <button (click)="loadBatches()" class="btn-secondary text-xs">Try again</button>
+      </div>
+    </div>
+  } @else {
+    <div class="card overflow-hidden">
+      <div class="overflow-x-auto -m-5">
+        <table class="w-full text-sm min-w-[600px]">
+          <thead>
+            <tr class="border-b border-subtle bg-brand-50/50 text-left text-xs text-ink-400 uppercase tracking-wider">
+              <th class="py-3 px-5 font-semibold whitespace-nowrap">Batch #</th>
+              <th class="py-3 px-5 font-semibold whitespace-nowrap">Quantity</th>
+              <th class="py-3 px-5 font-semibold whitespace-nowrap">Status</th>
+              <th class="py-3 px-5 font-semibold whitespace-nowrap">Created</th>
+              <th class="py-3 px-5 font-semibold text-right whitespace-nowrap">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (batch of batchList; track batch.id) {
+              <tr class="border-b border-subtle/50 hover:bg-brand-50/30 transition-colors">
+                <td class="py-4 px-5 font-mono text-xs text-ink-100 font-semibold whitespace-nowrap">{{ batch.batchNumber }}</td>
+                <td class="py-4 px-5 font-mono text-xs text-ink-300 whitespace-nowrap">{{ batch.producedQuantity }} {{ batch.unit }}</td>
+                <td class="py-4 px-5"><span [class]="statusClass(batch.status)">{{ statusLabel(batch.status) }}</span></td>
+                <td class="py-4 px-5 text-xs text-ink-400 whitespace-nowrap">{{ formatDate(batch.createdAt) }}</td>
+                <td class="py-4 px-5 text-right whitespace-nowrap">
+                  <a [routerLink]="['/batches', batch.id]" class="text-xs font-semibold text-brand-600 hover:text-brand-700 transition-colors">View</a>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="5" class="py-16 text-center text-sm text-ink-400">
+                  No batches yet. Create your first batch to get started.
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-between mt-6">
+      <p class="text-xs text-ink-400">Showing {{ batchList.length }} of {{ totalCount() }} batches</p>
+      <div class="flex items-center gap-2">
+        <button class="btn-secondary text-xs h-8 px-3" [disabled]="page() === 1">Previous</button>
+        <button class="btn-primary text-xs h-8 px-3">{{ page() }}</button>
+        <button class="btn-secondary text-xs h-8 px-3" [disabled]="batchList.length < pageSize">Next</button>
+      </div>
+    </div>
+  }
+</div>

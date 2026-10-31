@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 using TraceLens.API.Middleware;
 using TraceLens.Application;
@@ -49,7 +49,9 @@ if (app.Environment.IsDevelopment())
     try
     {
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        db.Database.Migrate();
+        await db.Database.MigrateAsync();
+        await DbSeeder.SeedAsync(db);
+        Log.Information("Database migrated and seeded successfully");
     }
     catch (Exception ex)
     {

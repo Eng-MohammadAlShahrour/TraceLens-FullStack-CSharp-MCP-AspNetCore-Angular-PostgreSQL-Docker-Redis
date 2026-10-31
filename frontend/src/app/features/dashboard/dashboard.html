@@ -1,0 +1,129 @@
+﻿<div class="p-4 md:p-8 animate-fade-in">
+  <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 md:mb-8">
+    <div>
+      <div class="flex items-center gap-3">
+        <h1 class="text-2xl md:text-3xl font-bold text-ink-100 tracking-tight">Dashboard</h1>
+        <span class="badge badge-success flex items-center gap-1.5">
+          <span class="pulse-dot w-1.5 h-1.5 rounded-full bg-success"></span>
+          Live
+        </span>
+      </div>
+      <p class="text-sm text-ink-400 mt-1.5">Overview of your production batches</p>
+    </div>
+    <a routerLink="/batches/new" class="btn-primary w-full sm:w-auto">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M12 5v14M5 12h14"/></svg>
+      New Batch
+    </a>
+  </header>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5 mb-6 md:mb-8">
+    <div class="card">
+      <div class="flex items-start justify-between">
+        <div>
+          <p class="text-xs text-ink-400 uppercase tracking-wider font-semibold">Total Batches</p>
+          <p class="text-2xl md:text-3xl font-bold text-ink-100 mt-2 tracking-tight">12</p>
+          <p class="text-xs text-success font-medium mt-1">↑ 8% from last week</p>
+        </div>
+        <div class="w-10 h-10 md:w-11 md:h-11 rounded-xl flex items-center justify-center shrink-0" style="background: linear-gradient(135deg, rgba(13,148,136,0.12) 0%, rgba(6,182,212,0.12) 100%);">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#0D9488" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M3 7l9-4 9 4v10l-9 4-9-4V7z"/><path d="M3 7l9 4 9-4"/><path d="M12 21V11"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="flex items-start justify-between">
+        <div>
+          <p class="text-xs text-ink-400 uppercase tracking-wider font-semibold">In Production</p>
+          <p class="text-2xl md:text-3xl font-bold text-ink-100 mt-2 tracking-tight">3</p>
+          <p class="text-xs text-ink-400 font-medium mt-1">Active now</p>
+        </div>
+        <div class="w-10 h-10 md:w-11 md:h-11 rounded-xl flex items-center justify-center shrink-0" style="background: linear-gradient(135deg, rgba(6,182,212,0.12) 0%, rgba(34,211,238,0.12) 100%);">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#06B6D4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="flex items-start justify-between">
+        <div>
+          <p class="text-xs text-ink-400 uppercase tracking-wider font-semibold">QC Passed</p>
+          <p class="text-2xl md:text-3xl font-bold text-ink-100 mt-2 tracking-tight">7</p>
+          <p class="text-xs text-success font-medium mt-1">98% success rate</p>
+        </div>
+        <div class="w-10 h-10 md:w-11 md:h-11 rounded-xl flex items-center justify-center shrink-0" style="background: linear-gradient(135deg, rgba(16,185,129,0.12) 0%, rgba(52,211,153,0.12) 100%);">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="flex items-start justify-between">
+        <div>
+          <p class="text-xs text-ink-400 uppercase tracking-wider font-semibold">Quarantined</p>
+          <p class="text-2xl md:text-3xl font-bold text-ink-100 mt-2 tracking-tight">2</p>
+          <p class="text-xs text-danger font-medium mt-1">Needs attention</p>
+        </div>
+        <div class="w-10 h-10 md:w-11 md:h-11 rounded-xl flex items-center justify-center shrink-0" style="background: linear-gradient(135deg, rgba(239,68,68,0.12) 0%, rgba(248,113,113,0.12) 100%);">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="flex items-center justify-between mb-5">
+      <div>
+        <h2 class="text-base md:text-lg font-bold text-ink-100 tracking-tight">Recent Batches</h2>
+        <p class="text-xs text-ink-400 mt-0.5">Latest production activity</p>
+      </div>
+      <a routerLink="/batches" class="text-sm font-semibold text-brand-600 hover:text-brand-700 transition-colors flex items-center gap-1">
+        View all
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+    </div>
+
+    <div class="overflow-x-auto -mx-5 px-5">
+      <table class="w-full text-sm min-w-[600px]">
+        <thead>
+          <tr class="border-b border-subtle text-left text-xs text-ink-400 uppercase tracking-wider">
+            <th class="pb-3 font-semibold whitespace-nowrap">Batch #</th>
+            <th class="pb-3 font-semibold whitespace-nowrap">Product</th>
+            <th class="pb-3 font-semibold whitespace-nowrap">Quantity</th>
+            <th class="pb-3 font-semibold whitespace-nowrap">Status</th>
+            <th class="pb-3 font-semibold whitespace-nowrap">Created</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="border-b border-subtle/50 hover:bg-brand-50/30 transition-colors">
+            <td class="py-3.5 font-mono text-xs text-ink-100 font-medium whitespace-nowrap">B-2026-001</td>
+            <td class="py-3.5 text-ink-300">Precision Part A</td>
+            <td class="py-3.5 font-mono text-xs text-ink-300 whitespace-nowrap">100 pcs</td>
+            <td class="py-3.5"><span class="badge badge-success">Passed</span></td>
+            <td class="py-3.5 text-xs text-ink-400 whitespace-nowrap">2 min ago</td>
+          </tr>
+          <tr class="border-b border-subtle/50 hover:bg-brand-50/30 transition-colors">
+            <td class="py-3.5 font-mono text-xs text-ink-100 font-medium whitespace-nowrap">B-2026-002</td>
+            <td class="py-3.5 text-ink-300">Precision Part B</td>
+            <td class="py-3.5 font-mono text-xs text-ink-300 whitespace-nowrap">250 pcs</td>
+            <td class="py-3.5"><span class="badge badge-info">In Production</span></td>
+            <td class="py-3.5 text-xs text-ink-400 whitespace-nowrap">15 min ago</td>
+          </tr>
+          <tr class="border-b border-subtle/50 hover:bg-brand-50/30 transition-colors">
+            <td class="py-3.5 font-mono text-xs text-ink-100 font-medium whitespace-nowrap">B-2026-003</td>
+            <td class="py-3.5 text-ink-300">Precision Part C</td>
+            <td class="py-3.5 font-mono text-xs text-ink-300 whitespace-nowrap">80 pcs</td>
+            <td class="py-3.5"><span class="badge badge-danger">Quarantined</span></td>
+            <td class="py-3.5 text-xs text-ink-400 whitespace-nowrap">1 hour ago</td>
+          </tr>
+          <tr class="hover:bg-brand-50/30 transition-colors">
+            <td class="py-3.5 font-mono text-xs text-ink-100 font-medium whitespace-nowrap">B-2026-004</td>
+            <td class="py-3.5 text-ink-300">Precision Part D</td>
+            <td class="py-3.5 font-mono text-xs text-ink-300 whitespace-nowrap">150 pcs</td>
+            <td class="py-3.5"><span class="badge badge-neutral">Created</span></td>
+            <td class="py-3.5 text-xs text-ink-400 whitespace-nowrap">3 hours ago</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

@@ -12,7 +12,7 @@ using TraceLens.Infrastructure.Persistence;
 namespace TraceLens.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20261031133805_InitialCreate")]
+    [Migration("20261031153117_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -48,11 +48,6 @@ namespace TraceLens.Infrastructure.Persistence.Migrations
                     b.Property<string>("Notes")
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
-
-                    b.Property<decimal>("ProducedQuantity")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("produced_quantity");
 
                     b.Property<Guid>("ProductId")
                         .HasColumnType("uuid")
@@ -104,11 +99,6 @@ namespace TraceLens.Infrastructure.Persistence.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)")
                         .HasColumnName("lot_number");
-
-                    b.Property<decimal>("Quantity")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("quantity");
 
                     b.Property<DateTime>("ReceivedAt")
                         .HasColumnType("timestamp with time zone")
@@ -182,12 +172,69 @@ namespace TraceLens.Infrastructure.Persistence.Migrations
                     b.ToTable("work_orders", (string)null);
                 });
 
+            modelBuilder.Entity("TraceLens.Domain.Entities.Batch", b =>
+                {
+                    b.OwnsOne("TraceLens.Domain.ValueObjects.Quantity", "ProducedQuantity", b1 =>
+                        {
+                            b1.Property<Guid>("BatchId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("Unit")
+                                .IsRequired()
+                                .HasMaxLength(20)
+                                .HasColumnType("character varying(20)")
+                                .HasColumnName("produced_quantity_unit");
+
+                            b1.Property<decimal>("Value")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("numeric(18,4)")
+                                .HasColumnName("produced_quantity_value");
+
+                            b1.HasKey("BatchId");
+
+                            b1.ToTable("batches");
+
+                            b1.WithOwner()
+                                .HasForeignKey("BatchId");
+                        });
+
+                    b.Navigation("ProducedQuantity")
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("TraceLens.Domain.Entities.MaterialLot", b =>
                 {
                     b.HasOne("TraceLens.Domain.Entities.Batch", null)
                         .WithMany("MaterialLots")
                         .HasForeignKey("batch_id")
                         .OnDelete(DeleteBehavior.Cascade);
+
+                    b.OwnsOne("TraceLens.Domain.ValueObjects.Quantity", "Quantity", b1 =>
+                        {
+                            b1.Property<Guid>("MaterialLotId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("Unit")
+                                .IsRequired()
+                                .HasMaxLength(20)
+                                .HasColumnType("character varying(20)")
+                                .HasColumnName("quantity_unit");
+
+                            b1.Property<decimal>("Value")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("numeric(18,4)")
+                                .HasColumnName("quantity_value");
+
+                            b1.HasKey("MaterialLotId");
+
+                            b1.ToTable("material_lots");
+
+                            b1.WithOwner()
+                                .HasForeignKey("MaterialLotId");
+                        });
+
+                    b.Navigation("Quantity")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("TraceLens.Domain.Entities.Batch", b =>

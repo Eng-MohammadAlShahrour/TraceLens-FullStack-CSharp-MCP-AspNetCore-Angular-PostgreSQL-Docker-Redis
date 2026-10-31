@@ -1,0 +1,69 @@
+<div class="p-4 md:p-8 animate-fade-in max-w-2xl mx-auto">
+  <header class="mb-8">
+    <a routerLink="/batches" class="text-xs font-semibold text-ink-400 hover:text-brand-600 inline-flex items-center gap-1 mb-3">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      Back to Batches
+    </a>
+    <h1 class="text-2xl md:text-3xl font-bold text-ink-100 tracking-tight">New Batch</h1>
+    <p class="text-sm text-ink-400 mt-1.5">Create a production batch</p>
+  </header>
+
+  @if (error()) {
+    <div class="mb-6 p-4 rounded-lg bg-danger/10 border border-danger/30 text-sm text-danger">
+      {{ error() }}
+    </div>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="submit()" class="card">
+    <div class="space-y-5">
+      <div>
+        <label class="block text-xs font-semibold text-ink-300 uppercase tracking-wider mb-1.5">Batch Number *</label>
+        <input type="text" formControlName="batchNumber" placeholder="B-2026-005" class="input" />
+        @if (isInvalid('batchNumber')) {
+          <p class="text-xs text-danger mt-1">Batch number is required (max 50 chars)</p>
+        }
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-ink-300 uppercase tracking-wider mb-1.5">Work Order ID *</label>
+        <input type="text" formControlName="workOrderId" class="input font-mono text-xs" />
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-ink-300 uppercase tracking-wider mb-1.5">Product ID *</label>
+        <input type="text" formControlName="productId" class="input font-mono text-xs" />
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-semibold text-ink-300 uppercase tracking-wider mb-1.5">Quantity *</label>
+          <input type="number" formControlName="producedQuantity" step="0.01" class="input" />
+          @if (isInvalid('producedQuantity')) {
+            <p class="text-xs text-danger mt-1">Quantity must be greater than 0</p>
+          }
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-ink-300 uppercase tracking-wider mb-1.5">Unit *</label>
+          <select formControlName="producedQuantityUnit" class="input cursor-pointer">
+            <option value="pcs">pcs</option>
+            <option value="kg">kg</option>
+            <option value="m">m</option>
+            <option value="L">L</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-end gap-2 mt-8 pt-6 border-t border-subtle">
+      <a routerLink="/batches" class="btn-secondary">Cancel</a>
+      <button type="submit" class="btn-primary" [disabled]="submitting()">
+        @if (submitting()) {
+          <svg class="animate-spin w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+          Creating...
+        } @else {
+          Create Batch
+        }
+      </button>
+    </div>
+  </form>
+</div>
