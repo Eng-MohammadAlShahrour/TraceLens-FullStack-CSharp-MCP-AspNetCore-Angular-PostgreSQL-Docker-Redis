@@ -1,4 +1,4 @@
-﻿# GitHub linguist — exclude generated files
+# GitHub linguist - exclude generated files
 frontend/package-lock.json linguist-generated=true
 frontend/package.json linguist-vendored=true
 frontend/angular.json linguist-vendored=true
