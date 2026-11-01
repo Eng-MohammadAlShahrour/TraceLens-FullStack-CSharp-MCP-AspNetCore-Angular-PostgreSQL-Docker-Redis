@@ -39,6 +39,8 @@ A full-stack **C# / ASP.NET Core 10 + Angular 20** platform that tracks every pr
 | **MCP server** | 3 tools for AI agents (Claude Desktop, Cursor, VS Code) |
 | **MCP Playground** | Built-in Angular UI to test all 3 MCP tools live from the browser |
 | **Observability** | Serilog + OpenAPI + Swagger UI |
+| **E2E tested** | 8 Playwright tests — auth (OAuth), batches CRUD, MCP playground, SignalR real-time |
+
 
 ---
 
@@ -326,7 +328,26 @@ TraceLens ships with a built-in **MCP Playground** at `http://localhost:4200/mcp
 - **No external tool needed** — no MCP Inspector, no Postman
 
 ---
+## E2E Testing — 8 Playwright tests
 
+```bash
+cd frontend
+npm run test:e2e        # headless
+npm run test:e2e:headed # with browser
+npm run test:e2e:ui     # interactive UI
+```
+
+| Spec | Tests | Coverage |
+|---|---|---|
+| `auth.spec.ts` | 3 | Redirect to login, valid OAuth login, invalid credentials error |
+| `batches.spec.ts` | 2 | List loads, create batch and see it in list |
+| `mcp.spec.ts` | 2 | `get_work_orders` returns data, `create_batch` via MCP → visible |
+| `signalr.spec.ts` | 1 | New batch via MCP appears on dashboard **without refresh** (real-time) |
+| **Total** | **8** | **All green ✅** |
+
+Requires PostgreSQL + API + Angular running. Uses Page Object Model (`e2e/pages/LoginPage.ts`).
+
+---
 ## Testing — 87 tests passing
 
 ```bash
