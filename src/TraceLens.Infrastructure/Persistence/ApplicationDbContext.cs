@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+using OpenIddict.EntityFrameworkCore.Models;
 using TraceLens.Application.Common.Interfaces;
 using TraceLens.Domain.Common;
 using TraceLens.Domain.Entities;
@@ -16,6 +17,9 @@ public sealed class ApplicationDbContext : DbContext, IApplicationDbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        // OpenIddict tables (Applications, Authorizations, Scopes, Tokens)
+        modelBuilder.UseOpenIddict();
+
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
         base.OnModelCreating(modelBuilder);
     }

@@ -1,8 +1,9 @@
-﻿import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { tap } from 'rxjs';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { BehaviorSubject, switchMap, tap, debounceTime } from 'rxjs';
 import { BatchService } from '../../core/services/batch.service';
+import { SignalRService } from '../../core/services/signalr.service';
 import { BatchesListResponse } from '../../core/models/batch.model';
 
 @Component({
@@ -13,12 +14,20 @@ import { BatchesListResponse } from '../../core/models/batch.model';
 })
 export class Dashboard {
   private batchService = inject(BatchService);
+  private signalr = inject(SignalRService);
 
   private _loaded = signal(false);
   readonly loading = computed(() => !this._loaded());
 
+  private refresh$ = new BehaviorSubject<void>(undefined);
+
   private batchesResponse = toSignal(
-    this.batchService.getList(1, 100).pipe(tap(() => this._loaded.set(true))),
+    this.refresh$.pipe(
+      
+      debounceTime(100),
+      switchMap(() => this.batchService.getList(1, 100)),
+      tap(() => this._loaded.set(true))
+    ),
     { initialValue: { items: [], totalCount: 0, page: 1, pageSize: 100 } as BatchesListResponse }
   );
 
@@ -36,6 +45,13 @@ export class Dashboard {
     const total = passed + failed;
     return total === 0 ? 0 : Math.round((passed / total) * 100);
   });
+
+  constructor() {
+    // Real-time: refetch on BatchCreated (from MCP or REST)
+    this.signalr.batchCreated$
+      .pipe(takeUntilDestroyed())
+      .subscribe(() => this.refresh$.next());
+  }
 
   statusBadge(status: string): string {
     const map: Record<string, string> = {

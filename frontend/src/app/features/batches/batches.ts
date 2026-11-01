@@ -1,7 +1,9 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+﻿import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { BatchService } from '../../core/services/batch.service';
+import { SignalRService } from '../../core/services/signalr.service';
 import { BatchListItem } from '../../core/models/batch.model';
 
 @Component({
@@ -12,6 +14,7 @@ import { BatchListItem } from '../../core/models/batch.model';
 })
 export class Batches implements OnInit {
   private batchService = inject(BatchService);
+  private signalr = inject(SignalRService);
 
   private _batches = signal<BatchListItem[]>([]);
   loading = signal(true);
@@ -22,6 +25,13 @@ export class Batches implements OnInit {
 
   get batchList(): BatchListItem[] {
     return this._batches();
+  }
+
+  constructor() {
+    // Real-time: refetch on BatchCreated
+    this.signalr.batchCreated$
+      .pipe(takeUntilDestroyed())
+      .subscribe(() => this.loadBatches());
   }
 
   ngOnInit(): void {

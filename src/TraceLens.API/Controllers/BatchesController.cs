@@ -1,5 +1,7 @@
 ﻿using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using OpenIddict.Validation.AspNetCore;
 using TraceLens.Application.Features.Batches.CreateBatch;
 using TraceLens.Application.Features.Batches.FailQC;
 using TraceLens.Application.Features.Batches.GetBatchById;
@@ -13,6 +15,7 @@ namespace TraceLens.API.Controllers;
 
 [ApiController]
 [Route("api/batches")]
+[Authorize(AuthenticationSchemes = OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme)]
 public sealed class BatchesController : ControllerBase
 {
     private readonly ISender _mediator;
