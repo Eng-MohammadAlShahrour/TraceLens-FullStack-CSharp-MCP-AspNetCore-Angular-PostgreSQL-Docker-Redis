@@ -14,6 +14,7 @@ A full-stack **C# / ASP.NET Core 10 + Angular 20** platform that tracks every pr
 [![OAuth](https://img.shields.io/badge/OAuth-2.0-blueviolet?style=for-the-badge&logo=openid)](https://openid.net/connect/)
 [![SignalR](https://img.shields.io/badge/SignalR-Real--time-purple?style=for-the-badge)](https://dotnet.microsoft.com/apps/aspnet/signalr)
 [![Tests](https://img.shields.io/badge/Tests-87_passing-success?style=for-the-badge)](tests/)
+[![E2E](https://img.shields.io/badge/E2E-8_passing-blue?style=for-the-badge&logo=playwright)](frontend/e2e)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 
 ---
