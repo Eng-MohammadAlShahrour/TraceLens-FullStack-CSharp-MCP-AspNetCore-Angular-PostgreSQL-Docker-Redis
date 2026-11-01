@@ -419,6 +419,7 @@ Installing an external MCP client (Inspector, Claude Desktop) creates friction f
 | Frontend Auth | JWT bearer interceptor (functional HttpInterceptorFn) |
 | Frontend Real-time | @microsoft/signalr 10.x |
 | Tests | xUnit, FluentAssertions, EF Core InMemory, SQLite, NSubstitute |
+| **E2E Tests** | Playwright 1.x (Chromium) — 8 tests |
 | Container | Docker Compose |
 
 ---
@@ -440,7 +441,7 @@ Installing an external MCP client (Inspector, Claude Desktop) creates friction f
 - [x] 87 automated tests — Domain (incl. WorkOrder), Application, API, Integration
 - [ ] Hangfire — QC reminders, stale batch alerts
 - [ ] Redis — caching for dashboard aggregations
-- [ ] Playwright E2E tests — full user journey
+- [x] Playwright E2E tests — 8 tests (auth, batches, mcp, signalr)
 
 ---
 
