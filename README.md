@@ -257,6 +257,32 @@ Batch (AggregateRoot)
 | POST | `/api/batches/{id}/quarantine` | any → Quarantined (requires reason) |
 
 ---
+## MCP Server (Model Context Protocol)
+
+TraceLens exposes a **Model Context Protocol** server over HTTP at `/mcp`. AI agents (Claude Desktop, Cursor, VS Code, etc.) can call 3 tools backed by the same CQRS handlers and PostgreSQL data.
+
+| Tool | Purpose | Parameters |
+| :--- | :--- | :--- |
+| `get_batches_by_status` | Filter batches by lifecycle status | `status` (string) |
+| `get_work_orders` | List all production work orders | — |
+| `create_batch` | Create a new batch | `batchNumber`, `workOrderId`, `productId`, `producedQuantity`, `producedQuantityUnit` |
+
+### Connect via MCP Inspector
+
+```bash
+npx @modelcontextprotocol/inspector --url http://localhost:5268/mcp
+Call a tool (JSON-RPC)
+bash
+curl -X POST http://localhost:5268/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"get_work_orders","arguments":{}}}'
+Why this is a real AI integration
+No duplicate logic — every tool calls the same ISender (MediatR) used by REST endpoints.
+
+No fake data — tools query PostgreSQL via EF Core.
+
+Clean Architecture preserved — MCP is just another entry point, not a new project.
 
 ## Testing — 59 tests passing
 
