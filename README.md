@@ -1,8 +1,8 @@
 # TraceLens
 
-**Manufacturing batch traceability — end to end**
+**Manufacturing batch traceability â€” end to end**
 
-A full-stack **C# / ASP.NET Core 10 + Angular 20** platform that tracks every production batch — which raw material lots went into it, which quality checks it passed, and which customer received it. Strict state machine, full audit trail, domain events, **59 automated tests**, and an **MCP server** for AI agents.
+A full-stack **C# / ASP.NET Core 10 + Angular 20** platform that tracks every production batch â€” which raw material lots went into it, which quality checks it passed, and which customer received it. Strict state machine, full audit trail, domain events, **59 automated tests**, and an **MCP server** for AI agents.
 
 [![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)](https://dotnet.microsoft.com)
 [![C#](https://img.shields.io/badge/C%23-14-239120?style=for-the-badge&logo=csharp&logoColor=white)](https://learn.microsoft.com/dotnet/csharp/)
@@ -20,14 +20,14 @@ A full-stack **C# / ASP.NET Core 10 + Angular 20** platform that tracks every pr
 
 | Feature | How |
 | :--- | :--- |
-| **Batch lifecycle** | Created → InProduction → QCPending → QCPassed → Shipped |
+| **Batch lifecycle** | Created â†’ InProduction â†’ QCPending â†’ QCPassed â†’ Shipped |
 | **Alternative branches** | QCFailed, Quarantined |
 | **Material traceability** | Every batch records the material lots it consumed |
 | **Quality control** | Pass/fail with automatic status transition |
 | **Audit trail** | Every state change with timestamp |
 | **Domain events** | BatchCreated, QualityCheckPassed, BatchQuarantined |
 | **Rich domain model** | Invalid transitions throw at the domain level |
-| **Clean architecture** | Domain → Application → Infrastructure → API |
+| **Clean architecture** | Domain â†’ Application â†’ Infrastructure â†’ API |
 | **CQRS** | MediatR handlers + FluentValidation pipeline |
 | **Angular 20 frontend** | Dashboard, Batches, Create, Details, Quarantine modal |
 | **MCP server** | 3 tools for AI agents (Claude Desktop, Cursor, VS Code) |
@@ -83,33 +83,33 @@ npm start
 
 ```
 Batch (AggregateRoot)
-├── BatchNumber (ValueObject)
-├── Quantity (ValueObject) — OwnsOne(value, unit)
-├── BatchStatus (enum: Created → InProduction → QCPassed → Shipped)
-├── MaterialLots (collection of MaterialLot)
-├── WorkOrderId, ProductId
-├── Timestamps (Created, Started, Completed)
-└── Domain Events (BatchCreated, QualityCheckPassed, BatchQuarantined)
+â”œâ”€â”€ BatchNumber (ValueObject)
+â”œâ”€â”€ Quantity (ValueObject) â€” OwnsOne(value, unit)
+â”œâ”€â”€ BatchStatus (enum: Created â†’ InProduction â†’ QCPassed â†’ Shipped)
+â”œâ”€â”€ MaterialLots (collection of MaterialLot)
+â”œâ”€â”€ WorkOrderId, ProductId
+â”œâ”€â”€ Timestamps (Created, Started, Completed)
+â””â”€â”€ Domain Events (BatchCreated, QualityCheckPassed, BatchQuarantined)
 ```
 
 ---
 
 ## API Reference
 
-### Batches (`/api/batches`) — 8 endpoints
+### Batches (`/api/batches`) â€” 8 endpoints
 
 | Method | Path | Description |
 | :--- | :--- | :--- |
 | POST | `/api/batches` | Create a new batch |
 | GET | `/api/batches/{id}` | Get batch by ID |
 | GET | `/api/batches?page=1&pageSize=20` | Paginated list |
-| POST | `/api/batches/{id}/start-production` | Created → InProduction |
-| POST | `/api/batches/{id}/pass-qc` | InProduction → QCPassed |
-| POST | `/api/batches/{id}/fail-qc` | InProduction → QCFailed |
-| POST | `/api/batches/{id}/ship` | QCPassed → Shipped |
-| POST | `/api/batches/{id}/quarantine` | any → Quarantined (requires reason) |
+| POST | `/api/batches/{id}/start-production` | Created â†’ InProduction |
+| POST | `/api/batches/{id}/pass-qc` | InProduction â†’ QCPassed |
+| POST | `/api/batches/{id}/fail-qc` | InProduction â†’ QCFailed |
+| POST | `/api/batches/{id}/ship` | QCPassed â†’ Shipped |
+| POST | `/api/batches/{id}/quarantine` | any â†’ Quarantined (requires reason) |
 
-### Work Orders (`/api/work-orders`) — 2 endpoints
+### Work Orders (`/api/work-orders`) â€” 2 endpoints
 
 | Method | Path | Description |
 | :--- | :--- | :--- |
@@ -126,7 +126,7 @@ TraceLens exposes a **Model Context Protocol** server over HTTP at `/mcp`. AI ag
 | Tool | Purpose | Parameters |
 | :--- | :--- | :--- |
 | `get_batches_by_status` | Filter batches by lifecycle status | `status` (string) |
-| `get_work_orders` | List all production work orders | — |
+| `get_work_orders` | List all production work orders | â€” |
 | `create_batch` | Create a new batch | `batchNumber`, `workOrderId`, `productId`, `producedQuantity`, `producedQuantityUnit` |
 
 ### Connect via MCP Inspector
@@ -146,14 +146,14 @@ curl -X POST http://localhost:5268/mcp \
 
 ### Why this is a real AI integration
 
-- **No duplicate logic** — every tool calls the same `ISender` (MediatR) used by REST endpoints.
-- **No fake data** — tools query PostgreSQL via EF Core.
-- **Clean Architecture preserved** — MCP is just another entry point, not a new project.
+- **No duplicate logic** â€” every tool calls the same `ISender` (MediatR) used by REST endpoints.
+- **No fake data** â€” tools query PostgreSQL via EF Core.
+- **Clean Architecture preserved** â€” MCP is just another entry point, not a new project.
 
 ---
 | **MCP Playground** | **Built-in Angular UI to test all 3 MCP tools live from the browser** |
 
-## Testing — 59 tests passing
+## Testing â€” 59 tests passing
 
 ```bash
 dotnet test
@@ -177,19 +177,19 @@ Testability + independence from frameworks. Domain has zero external dependencie
 Commands and queries have different shapes. `CreateBatchCommand` mutates and returns an ID. `GetBatchesListQuery` reads and returns paginated DTO. Each handler stays small and testable.
 
 ### Why Rich Domain Model (not anemic)?
-Invalid state should be impossible. `Batch.MarkQCCompleted(result)` throws if batch is in `Created` state. You cannot ship an un-QC'd batch — the domain forbids it.
+Invalid state should be impossible. `Batch.MarkQCCompleted(result)` throws if batch is in `Created` state. You cannot ship an un-QC'd batch â€” the domain forbids it.
 
 ### Why Value Objects for BatchNumber and Quantity?
 Primitive obsession is a bug farm. `string batchNumber` can be empty or malformed. `Quantity` can be negative. `BatchNumber.Create()` and `Quantity.Create()` reject invalid values at construction.
 
 ### Why OwnsOne for Quantity?
-`Quantity` has `Value` (decimal) + `Unit` (string). Using `OwnsOne`, EF Core stores them as two columns (`produced_quantity_value`, `produced_quantity_unit`) in the same table — no extra join, no loss of the unit.
+`Quantity` has `Value` (decimal) + `Unit` (string). Using `OwnsOne`, EF Core stores them as two columns (`produced_quantity_value`, `produced_quantity_unit`) in the same table â€” no extra join, no loss of the unit.
 
 ### Why Domain Events?
-Decoupling. When a batch passes QC, we can send an email, update a dashboard, or trigger a downstream process — without touching the `Batch` aggregate.
+Decoupling. When a batch passes QC, we can send an email, update a dashboard, or trigger a downstream process â€” without touching the `Batch` aggregate.
 
 ### Why MCP Server?
-To let AI agents (Claude Desktop, Cursor, VS Code) interact with TraceLens data through a standardized protocol. Tools call the same CQRS handlers as REST endpoints — no duplicate logic, no fake data.
+To let AI agents (Claude Desktop, Cursor, VS Code) interact with TraceLens data through a standardized protocol. Tools call the same CQRS handlers as REST endpoints â€” no duplicate logic, no fake data.
 
 ---
 
@@ -217,28 +217,28 @@ To let AI agents (Claude Desktop, Cursor, VS Code) interact with TraceLens data 
 
 ## Roadmap
 
-- [x] Clean Architecture — 4 layers, DI, testable
-- [x] CQRS with MediatR — 10 features (Batches + Work Orders)
-- [x] EF Core + PostgreSQL — migrations, OwnsOne, enums as strings
-- [x] Domain Model — aggregates, value objects, domain events
-- [x] REST API — controllers, OpenAPI, Swagger UI
-- [x] Global Exception Middleware — typed error responses
-- [x] Docker Compose — PostgreSQL container, port isolation
-- [x] Angular 20 frontend — Dashboard, Batches, Create, Details, Work Orders, Quarantine modal
-- [x] **MCP Server** — 3 tools for AI agents
-- [x] 59 automated tests — Domain, Application, API, Integration
-- [ ] OAuth 2.0 with OpenIddict — PKCE, RBAC, refresh tokens
-- [ ] SignalR — real-time batch status updates
-- [ ] Hangfire — QC reminders, stale batch alerts
-- [ ] Redis — caching for dashboard aggregations
-- [ ] Playwright E2E tests — full user journey
+- [x] Clean Architecture â€” 4 layers, DI, testable
+- [x] CQRS with MediatR â€” 10 features (Batches + Work Orders)
+- [x] EF Core + PostgreSQL â€” migrations, OwnsOne, enums as strings
+- [x] Domain Model â€” aggregates, value objects, domain events
+- [x] REST API â€” controllers, OpenAPI, Swagger UI
+- [x] Global Exception Middleware â€” typed error responses
+- [x] Docker Compose â€” PostgreSQL container, port isolation
+- [x] Angular 20 frontend â€” Dashboard, Batches, Create, Details, Work Orders, Quarantine modal
+- [x] **MCP Server** â€” 3 tools for AI agents
+- [x] 59 automated tests â€” Domain, Application, API, Integration
+- [ ] OAuth 2.0 with OpenIddict â€” PKCE, RBAC, refresh tokens
+- [ ] SignalR â€” real-time batch status updates
+- [ ] Hangfire â€” QC reminders, stale batch alerts
+- [ ] Redis â€” caching for dashboard aggregations
+- [ ] Playwright E2E tests â€” full user journey
 
 ---
 
 ## License
 
-MIT © 2026 Mohammad Al-Shahrour
+MIT آ© 2026 Mohammad Al-Shahrour
 
 ---
 
-*Built with C# / ASP.NET Core, Angular, PostgreSQL — and an MCP server for AI agents.*
+*Built with C# / ASP.NET Core, Angular, PostgreSQL â€” and an MCP server for AI agents.*

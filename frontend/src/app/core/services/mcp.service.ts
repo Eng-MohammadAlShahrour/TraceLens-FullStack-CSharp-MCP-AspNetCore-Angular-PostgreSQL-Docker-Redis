@@ -1,4 +1,4 @@
-﻿import { Injectable } from '@angular/core';
+import { Injectable } from '@angular/core';
 
 export interface McpTool {
   name: string;
@@ -31,7 +31,15 @@ export class McpService {
         return { success: false, error: response.error.message ?? 'MCP error', data: null, durationMs };
       }
 
-      const content = response.result?.content ?? [];
+      const result = response.result;
+
+      if (result?.isError) {
+        const rawText = (result.content ?? []).find((c: any) => c.type === 'text')?.text ?? 'MCP tool error';
+        const cleaned = rawText.replace(/^An error occurred invoking '[^']+':\s*/i, '').trim() || rawText;
+        return { success: false, error: cleaned, data: null, durationMs };
+      }
+
+      const content = result?.content ?? [];
       const textContent = content.find((c: any) => c.type === 'text')?.text;
       let data = textContent;
       try { data = JSON.parse(textContent); } catch { /* keep string */ }
