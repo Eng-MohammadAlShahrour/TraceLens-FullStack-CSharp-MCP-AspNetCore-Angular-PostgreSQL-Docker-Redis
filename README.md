@@ -2,7 +2,7 @@
 
 > Manufacturing batch traceability — end to end
 
-A full-stack **C# / ASP.NET Core 10 + Angular 20** platform that tracks every production batch — which raw material lots went into it, which quality checks it passed, and which customer received it. Strict state machine, full audit trail, domain events, real-time updates, **OAuth 2.0 authentication**, 87 automated tests, and an **MCP server for AI agents**.
+A full-stack **C# / ASP.NET Core 10 + Angular 20** platform that tracks every production batch — which raw material lots went into it, which quality checks it passed, and which customer received it. Strict state machine, full audit trail, domain events, real-time updates, **OAuth 2.0 authentication**, 89 automated tests, 9 Playwright E2E tests, background jobs via Hangfire, and an **MCP server for AI agents**.
 
 [![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)](https://dotnet.microsoft.com)
 [![C#](https://img.shields.io/badge/C%23-14-239120?style=for-the-badge&logo=csharp&logoColor=white)](https://learn.microsoft.com/dotnet/csharp/)
@@ -13,8 +13,9 @@ A full-stack **C# / ASP.NET Core 10 + Angular 20** platform that tracks every pr
 [![MCP](https://img.shields.io/badge/MCP-Model_Context_Protocol-blueviolet?style=for-the-badge)](https://modelcontextprotocol.io)
 [![OAuth](https://img.shields.io/badge/OAuth-2.0-blueviolet?style=for-the-badge&logo=openid)](https://openid.net/connect/)
 [![SignalR](https://img.shields.io/badge/SignalR-Real--time-purple?style=for-the-badge)](https://dotnet.microsoft.com/apps/aspnet/signalr)
-[![Tests](https://img.shields.io/badge/Tests-87_passing-success?style=for-the-badge)](tests/)
-[![E2E](https://img.shields.io/badge/E2E-8_passing-blue?style=for-the-badge&logo=playwright)](frontend/e2e)
+[![Hangfire](https://img.shields.io/badge/Hangfire-background_jobs-orange?style=for-the-badge)](https://www.hangfire.io)
+[![Tests](https://img.shields.io/badge/Tests-89_passing-success?style=for-the-badge)](tests/)
+[![E2E](https://img.shields.io/badge/E2E-9_passing-blue?style=for-the-badge&logo=playwright)](frontend/e2e)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 
 ---
@@ -38,9 +39,9 @@ A full-stack **C# / ASP.NET Core 10 + Angular 20** platform that tracks every pr
 | **OAuth 2.0 (OpenIddict)** | Embedded authorization server — password grant + refresh tokens, JWE-encrypted tokens |
 | **MCP server** | 3 tools for AI agents (Claude Desktop, Cursor, VS Code) |
 | **MCP Playground** | Built-in Angular UI to test all 3 MCP tools live from the browser |
+| **Background jobs (Hangfire)** | Hourly stale-batch detection + protected dashboard at `/hangfire` |
 | **Observability** | Serilog + OpenAPI + Swagger UI |
-| **E2E tested** | 8 Playwright tests — auth (OAuth), batches CRUD, MCP playground, SignalR real-time |
-
+| **E2E tested** | 9 Playwright tests — auth, batches, MCP, SignalR real-time, Hangfire |
 
 ---
 
@@ -84,6 +85,7 @@ Open `http://localhost:4200` → you'll be redirected to `/login`.
 | Angular | http://localhost:4200 |
 | MCP | http://localhost:5268/mcp |
 | OAuth Token Endpoint | http://localhost:5268/connect/token |
+| Hangfire Dashboard | http://localhost:5268/hangfire |
 
 > Container uses port **5433** on the host to avoid conflict with any local PostgreSQL.
 
@@ -98,7 +100,7 @@ Open `http://localhost:4200` → you'll be redirected to `/login`.
 | **Domain** | Aggregates, Value Objects, Enums, Domain Events | Pure C# |
 | **Application** | CQRS commands/queries, MediatR handlers, FluentValidation | MediatR 14 |
 | **Infrastructure** | ApplicationDbContext, configurations, migrations, seeder | EF Core 10 + Npgsql |
-| **API** | Controllers, middleware, OpenAPI, Serilog, MCP tools, SignalR hubs | ASP.NET Core 10 |
+| **API** | Controllers, middleware, OpenAPI, Serilog, MCP tools, SignalR hubs, Hangfire jobs | ASP.NET Core 10 |
 | **Frontend** | Dashboard, Batches, Create, Details, MCP Playground, Login | Angular 20 + Tailwind v4 |
 | **Auth** | OAuth 2.0 / OIDC authorization server | OpenIddict 7.x |
 
@@ -214,7 +216,7 @@ Missing/invalid token → `401 Unauthorized`.
 - **JWE-encrypted tokens** — access tokens use RSA-OAEP + A256CBC-HS512, so a leaked token can't be decoded by third parties.
 - **Angular integration** — the SPA calls `/connect/token` directly, stores the JWE, and attaches it via a functional HTTP interceptor.
 - **Clean Architecture preserved** — `IAuthService` lives in Application; `JwtAuthService` + OpenIddict config live in Infrastructure/API.
-- **Graceful fallback** — the legacy JWT scheme remains wired alongside OpenIddict so existing callers don't break during migration.
+- **OpenIddict is the default authentication scheme** — legacy JWT remains as a fallback, so existing callers don't break during migration.
 
 ---
 
@@ -245,6 +247,34 @@ MCP Playground → POST /mcp → MediatR CreateBatchCommand → PostgreSQL INSER
 ### Testing
 
 The SignalR integration is covered by `Handle_NotifiesSignalRAfterCreate` (uses NSubstitute to verify `IBatchNotifier` is called after successful batch creation).
+
+---
+
+## Background jobs (Hangfire)
+
+TraceLens uses **Hangfire** (with PostgreSQL storage) to run scheduled background jobs. The Hangfire Dashboard is available at `http://localhost:5268/hangfire` (protected — only accessible from `localhost` in development).
+
+### Jobs
+
+| Job | Schedule | Purpose |
+|---|---|---|
+| `check-stale-batches` | Hourly | Detects batches stuck in `InProduction` for > 24h and logs a warning via `ILogger` |
+
+### How it works
+
+1. On API startup, `RecurringJobManager.AddOrUpdate<CheckStaleBatchesJob>` registers the hourly job.
+2. Hangfire stores job metadata in PostgreSQL (schema: `hangfire` — created automatically).
+3. Every hour, `CheckStaleBatchesJob.Run` queries batches where `status = InProduction AND started_at < now - 24h`.
+4. Any stale batch is logged via Serilog (`[WRN] STALE BATCH: {BatchNumber} in production since {StartedAt}`).
+
+### Viewing the dashboard
+
+Open `http://localhost:5268/hangfire` from localhost. You'll see:
+- **Recurring Jobs** → `check-stale-batches` (Hourly)
+- **Servers** → 1 server online (20 workers)
+- **Succeeded / Failed** history
+
+> **Production note:** the current filter allows only localhost/127.0.0.1. For production, replace `HangfireAuthorizationFilter` with a real authentication scheme (e.g., `[Authorize]` on the dashboard endpoint).
 
 ---
 
@@ -328,7 +358,8 @@ TraceLens ships with a built-in **MCP Playground** at `http://localhost:4200/mcp
 - **No external tool needed** — no MCP Inspector, no Postman
 
 ---
-## E2E Testing — 8 Playwright tests
+
+## E2E Testing — 9 Playwright tests
 
 ```bash
 cd frontend
@@ -343,12 +374,14 @@ npm run test:e2e:ui     # interactive UI
 | `batches.spec.ts` | 2 | List loads, create batch and see it in list |
 | `mcp.spec.ts` | 2 | `get_work_orders` returns data, `create_batch` via MCP → visible |
 | `signalr.spec.ts` | 1 | New batch via MCP appears on dashboard **without refresh** (real-time) |
-| **Total** | **8** | **All green ✅** |
+| `hangfire.spec.ts` | 1 | Hangfire dashboard accessible on localhost (protected) |
+| **Total** | **9** | **All green ✅** |
 
 Requires PostgreSQL + API + Angular running. Uses Page Object Model (`e2e/pages/LoginPage.ts`).
 
 ---
-## Testing — 87 tests passing
+
+## Testing — 89 tests passing
 
 ```bash
 dotnet test
@@ -360,7 +393,8 @@ dotnet test
 | **Application** (Validators, Handlers) | 32 | CQRS commands, validation pipeline, pagination, SignalR verification |
 | **API** (Controllers) | 6 | HTTP responses, mediator wiring |
 | **Integration** (SQLite) | 4 | OwnsOne round-trip, unique indexes, enum-as-string |
-| **Total** | **87** | All green ✅ |
+| **Jobs** (CheckStaleBatches) | 2 | Stale-batch detection + no-op when clean |
+| **Total** | **89** | All green ✅ |
 
 ---
 
@@ -388,7 +422,10 @@ Decoupling. When a batch passes QC, we can send an email, update a dashboard, or
 Users should not have to press refresh to see new batches. SignalR pushes updates over WebSockets, and combined with a `refresh$` Subject + `switchMap`, the Angular dashboard refetches transparently when events arrive — no polling, no stale UI.
 
 ### Why OpenIddict (OAuth 2.0) instead of plain JWT?
-Plain JWT forces every service to manage signing keys, refresh flows, and revocation. OpenIddict provides a full OAuth 2.0 / OIDC server: password grant, refresh tokens, scope validation, and JWE-encrypted tokens (defense-in-depth against token leakage). The Angular SPA talks to `/connect/token` like any third-party client — no special backend coupling.
+Plain JWT forces every service to manage signing keys, refresh flows, and revocation. OpenIddict provides a full OAuth 2.0 / OIDC server: password grant, refresh tokens, scope validation, and JWE-encrypted tokens (defense-in-depth against token leakage). The Angular SPA talks to `/connect/token` like any third-party client — no special backendcoupling.
+
+### Why Hangfire?
+Stale-batch detection is a background task — it should not block HTTP requests, and it must run even when no user is active. Hangfire provides durable scheduling (backed by PostgreSQL), automatic retries, and a monitoring dashboard — all without writing custom cron code.
 
 ### Why MCP Server?
 To let AI agents (Claude Desktop, Cursor, VS Code) interact with TraceLens data through a standardized protocol. Tools call the same CQRS handlers as REST endpoints — no duplicate logic, no fake data.
@@ -409,6 +446,7 @@ Installing an external MCP client (Inspector, Claude Desktop) creates friction f
 | MCP | ModelContextProtocol.AspNetCore 2.x |
 | Auth | OpenIddict 7.x (OAuth 2.0 / OIDC) |
 | Real-time | SignalR (WebSockets) |
+| Background jobs | Hangfire 1.8 (PostgreSQL storage) |
 | CQRS | MediatR 14 |
 | Validation | FluentValidation 12 |
 | ORM | EF Core 10 |
@@ -419,7 +457,7 @@ Installing an external MCP client (Inspector, Claude Desktop) creates friction f
 | Frontend Auth | JWT bearer interceptor (functional HttpInterceptorFn) |
 | Frontend Real-time | @microsoft/signalr 10.x |
 | Tests | xUnit, FluentAssertions, EF Core InMemory, SQLite, NSubstitute |
-| **E2E Tests** | Playwright 1.x (Chromium) — 8 tests |
+| E2E Tests | Playwright 1.x (Chromium) — 9 tests |
 | Container | Docker Compose |
 
 ---
@@ -438,10 +476,10 @@ Installing an external MCP client (Inspector, Claude Desktop) creates friction f
 - [x] MCP Playground — live browser UI to test all 3 tools
 - [x] SignalR — real-time batch notifications (hub + notifier + Angular subscriptions)
 - [x] OAuth 2.0 with OpenIddict — password grant + refresh tokens, JWE-encrypted tokens
-- [x] 87 automated tests — Domain (incl. WorkOrder), Application, API, Integration
-- [ ] Hangfire — QC reminders, stale batch alerts
+- [x] Hangfire — hourly stale-batch detection + protected dashboard
+- [x] Playwright E2E tests — 9 tests (auth, batches, mcp, signalr, hangfire)
+- [x] 89 automated tests — Domain (incl. WorkOrder), Application, API, Integration, Jobs
 - [ ] Redis — caching for dashboard aggregations
-- [x] Playwright E2E tests — 8 tests (auth, batches, mcp, signalr)
 
 ---
 
