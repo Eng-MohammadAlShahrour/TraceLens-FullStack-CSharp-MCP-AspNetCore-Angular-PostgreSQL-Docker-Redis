@@ -28,7 +28,8 @@ A full-stack **C# / ASP.NET Core 10 + Angular 20** platform that tracks every pr
 | **Rich domain model** | Invalid transitions throw at the domain level |
 | **Clean architecture** | Domain → Application → Infrastructure → API |
 | **CQRS** | MediatR handlers + FluentValidation pipeline |
-| **Angular 20 frontend** | Dashboard, Batches, Create, Details, Quarantine modal |
+| **Angular 20 frontend** | Dashboard (real API stats), Batches, Create, Details, Work Orders, MCP Playground |
+| **Dashboard KPIs** | Live counts from PostgreSQL — Total, InProduction, QCPassed, Quarantined, QC success rate |
 | **MCP server** | 3 tools for AI agents (Claude Desktop, Cursor, VS Code) |
 | **MCP Playground** | Built-in Angular UI to test all 3 MCP tools live from the browser |
 | **Observability** | Serilog + OpenAPI + Swagger UI |
