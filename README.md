@@ -51,25 +51,37 @@ dotnet run --project src/TraceLens.API
 cd frontend
 npm install
 npm start
-URLs
-Service	URL
-API	http://localhost:5268
-Swagger UI	http://localhost:5268/swagger
-Angular	http://localhost:4200
-MCP	http://localhost:5268/mcp
-Container uses port 5433 on the host to avoid conflict with any local PostgreSQL.
+```
 
-Architecture
-4-Layer Clean Architecture
-Layer	Purpose	Tech
-Domain	Aggregates, Value Objects, Enums, Domain Events	Pure C#
-Application	CQRS commands/queries, MediatR handlers, FluentValidation	MediatR 14
-Infrastructure	ApplicationDbContext, configurations, migrations, seeder	EF Core 10 + Npgsql
-API	Controllers, middleware, OpenAPI, Serilog, MCP tools	ASP.NET Core 10
-Frontend	Dashboard, Batches, Create, Details	Angular 20 + Tailwind v4
-[Planned] Auth	OAuth 2.0 / OIDC authorization server	OpenIddict
-Domain Model
-text
+### URLs
+
+| Service | URL |
+| :--- | :--- |
+| **API** | http://localhost:5268 |
+| **Swagger UI** | http://localhost:5268/swagger |
+| **Angular** | http://localhost:4200 |
+| **MCP** | http://localhost:5268/mcp |
+
+> Container uses port **5433** on the host to avoid conflict with any local PostgreSQL.
+
+---
+
+## Architecture
+
+### 4-Layer Clean Architecture
+
+| Layer | Purpose | Tech |
+| :--- | :--- | :--- |
+| **Domain** | Aggregates, Value Objects, Enums, Domain Events | Pure C# |
+| **Application** | CQRS commands/queries, MediatR handlers, FluentValidation | MediatR 14 |
+| **Infrastructure** | ApplicationDbContext, configurations, migrations, seeder | EF Core 10 + Npgsql |
+| **API** | Controllers, middleware, OpenAPI, Serilog, MCP tools | ASP.NET Core 10 |
+| **Frontend** | Dashboard, Batches, Create, Details | Angular 20 + Tailwind v4 |
+| **[Planned] Auth** | OAuth 2.0 / OIDC authorization server | OpenIddict |
+
+### Domain Model
+
+```
 Batch (AggregateRoot)
 ├── BatchNumber (ValueObject)
 ├── Quantity (ValueObject) — OwnsOne(value, unit)
@@ -78,108 +90,155 @@ Batch (AggregateRoot)
 ├── WorkOrderId, ProductId
 ├── Timestamps (Created, Started, Completed)
 └── Domain Events (BatchCreated, QualityCheckPassed, BatchQuarantined)
-API Reference
-Batches (/api/batches) — 8 endpoints
-Method	Path	Description
-POST	/api/batches	Create a new batch
-GET	/api/batches/{id}	Get batch by ID
-GET	/api/batches?page=1&pageSize=20	Paginated list
-POST	/api/batches/{id}/start-production	Created → InProduction
-POST	/api/batches/{id}/pass-qc	InProduction → QCPassed
-POST	/api/batches/{id}/fail-qc	InProduction → QCFailed
-POST	/api/batches/{id}/ship	QCPassed → Shipped
-POST	/api/batches/{id}/quarantine	any → Quarantined (requires reason)
-Work Orders (/api/work-orders) — 2 endpoints
-Method	Path	Description
-POST	/api/work-orders	Create a work order
-GET	/api/work-orders?page=1&pageSize=20	Paginated list
-MCP Server (Model Context Protocol)
-TraceLens exposes a Model Context Protocol server over HTTP at /mcp. AI agents (Claude Desktop, Cursor, VS Code, etc.) can call 3 tools backed by the same CQRS handlers and PostgreSQL data.
+```
 
-Tool	Purpose	Parameters
-get_batches_by_status	Filter batches by lifecycle status	status (string)
-get_work_orders	List all production work orders	—
-create_batch	Create a new batch	batchNumber, workOrderId, productId, producedQuantity, producedQuantityUnit
-Connect via MCP Inspector
-bash
+---
+
+## API Reference
+
+### Batches (`/api/batches`) — 8 endpoints
+
+| Method | Path | Description |
+| :--- | :--- | :--- |
+| POST | `/api/batches` | Create a new batch |
+| GET | `/api/batches/{id}` | Get batch by ID |
+| GET | `/api/batches?page=1&pageSize=20` | Paginated list |
+| POST | `/api/batches/{id}/start-production` | Created → InProduction |
+| POST | `/api/batches/{id}/pass-qc` | InProduction → QCPassed |
+| POST | `/api/batches/{id}/fail-qc` | InProduction → QCFailed |
+| POST | `/api/batches/{id}/ship` | QCPassed → Shipped |
+| POST | `/api/batches/{id}/quarantine` | any → Quarantined (requires reason) |
+
+### Work Orders (`/api/work-orders`) — 2 endpoints
+
+| Method | Path | Description |
+| :--- | :--- | :--- |
+| POST | `/api/work-orders` | Create a work order |
+| GET | `/api/work-orders?page=1&pageSize=20` | Paginated list |
+
+---
+
+## MCP Server (Model Context Protocol)
+
+TraceLens exposes a **Model Context Protocol** server over HTTP at `/mcp`. AI agents (Claude Desktop, Cursor, VS Code, etc.) can call 3 tools backed by the same CQRS handlers and PostgreSQL data.
+
+![MCP Inspector](docs/screenshots/mcp.png)
+
+| Tool | Purpose | Parameters |
+| :--- | :--- | :--- |
+| `get_batches_by_status` | Filter batches by lifecycle status | `status` (string) |
+| `get_work_orders` | List all production work orders | — |
+| `create_batch` | Create a new batch | `batchNumber`, `workOrderId`, `productId`, `producedQuantity`, `producedQuantityUnit` |
+
+### Connect via MCP Inspector
+
+```bash
 npx @modelcontextprotocol/inspector --url http://localhost:5268/mcp
-Call a tool (JSON-RPC)
-bash
+```
+
+### Call a tool (JSON-RPC)
+
+```bash
 curl -X POST http://localhost:5268/mcp \
   -H "Content-Type: application/json" \
   -H "Accept: application/json, text/event-stream" \
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"get_work_orders","arguments":{}}}'
-Why this is a real AI integration
-No duplicate logic — every tool calls the same ISender (MediatR) used by REST endpoints.
+```
 
-No fake data — tools query PostgreSQL via EF Core.
+### Why this is a real AI integration
 
-Clean Architecture preserved — MCP is just another entry point, not a new project.
+- **No duplicate logic** — every tool calls the same `ISender` (MediatR) used by REST endpoints.
+- **No fake data** — tools query PostgreSQL via EF Core.
+- **Clean Architecture preserved** — MCP is just another entry point, not a new project.
 
-Testing — 59 tests passing
-bash
+---
+
+## Testing — 59 tests passing
+
+```bash
 dotnet test
-Suite	Tests	Coverage
-Domain (Batch, BatchNumber, Quantity)	31	State transitions, guard conditions, ValueObject validation
-Application (Validators, Handlers)	18	CQRS commands, validation pipeline, pagination
-API (Controllers)	6	HTTP responses, mediator wiring
-Integration (SQLite)	4	OwnsOne round-trip, unique indexes, enum-as-string
-Design Decisions
-Why Clean Architecture (4 projects)?
+```
+
+| Suite | Tests | Coverage |
+| :--- | :--- | :--- |
+| **Domain** (Batch, BatchNumber, Quantity) | 31 | State transitions, guard conditions, ValueObject validation |
+| **Application** (Validators, Handlers) | 18 | CQRS commands, validation pipeline, pagination |
+| **API** (Controllers) | 6 | HTTP responses, mediator wiring |
+| **Integration** (SQLite) | 4 | OwnsOne round-trip, unique indexes, enum-as-string |
+
+---
+
+## Design Decisions
+
+### Why Clean Architecture (4 projects)?
 Testability + independence from frameworks. Domain has zero external dependencies except MediatR. Business rules tested without EF Core, PostgreSQL, or ASP.NET Core.
 
-Why CQRS with MediatR?
-Commands and queries have different shapes. CreateBatchCommand mutates and returns an ID. GetBatchesListQuery reads and returns paginated DTO. Each handler stays small and testable.
+### Why CQRS with MediatR?
+Commands and queries have different shapes. `CreateBatchCommand` mutates and returns an ID. `GetBatchesListQuery` reads and returns paginated DTO. Each handler stays small and testable.
 
-Why Rich Domain Model (not anemic)?
-Invalid state should be impossible. Batch.MarkQCCompleted(result) throws if batch is in Created state. You cannot ship an un-QC'd batch — the domain forbids it.
+### Why Rich Domain Model (not anemic)?
+Invalid state should be impossible. `Batch.MarkQCCompleted(result)` throws if batch is in `Created` state. You cannot ship an un-QC'd batch — the domain forbids it.
 
-Why Value Objects for BatchNumber and Quantity?
-Primitive obsession is a bug farm. string batchNumber can be empty or malformed. Quantity can be negative. BatchNumber.Create() and Quantity.Create() reject invalid values at construction.
+### Why Value Objects for BatchNumber and Quantity?
+Primitive obsession is a bug farm. `string batchNumber` can be empty or malformed. `Quantity` can be negative. `BatchNumber.Create()` and `Quantity.Create()` reject invalid values at construction.
 
-Why OwnsOne for Quantity?
-Quantity has Value (decimal) + Unit (string). Using OwnsOne, EF Core stores them as two columns (produced_quantity_value, produced_quantity_unit) in the same table — no extra join, no loss of the unit.
+### Why OwnsOne for Quantity?
+`Quantity` has `Value` (decimal) + `Unit` (string). Using `OwnsOne`, EF Core stores them as two columns (`produced_quantity_value`, `produced_quantity_unit`) in the same table — no extra join, no loss of the unit.
 
-Why Domain Events?
-Decoupling. When a batch passes QC, we can send an email, update a dashboard, or trigger a downstream process — without touching the Batch aggregate.
+### Why Domain Events?
+Decoupling. When a batch passes QC, we can send an email, update a dashboard, or trigger a downstream process — without touching the `Batch` aggregate.
 
-Why MCP Server?
+### Why MCP Server?
 To let AI agents (Claude Desktop, Cursor, VS Code) interact with TraceLens data through a standardized protocol. Tools call the same CQRS handlers as REST endpoints — no duplicate logic, no fake data.
 
-Tech Stack
-Layer	Technology
-Runtime	.NET 10 (LTS until Nov 2028)
-Language	C# 14
-API	ASP.NET Core 10, Controllers
-OpenAPI	Microsoft.AspNetCore.OpenApi 10 + Swashbuckle SwaggerUI
-MCP	ModelContextProtocol.AspNetCore 2.x
-CQRS	MediatR 14
-Validation	FluentValidation 12
-ORM	EF Core 10
-Database	PostgreSQL 16 (Alpine)
-Logging	Serilog
-Frontend	Angular 20 + Tailwind CSS v4 + Inter + JetBrains Mono
-Design System	Fresh Teal (Custom theme, mobile-first)
-Auth (planned)	OpenIddict (OAuth 2.0 + OIDC)
-Tests	xUnit, FluentAssertions, EF Core InMemory, SQLite
-Container	Docker Compose
-Roadmap
-☑ Clean Architecture — 4 layers, DI, testable
-☑ CQRS with MediatR — 10 features (Batches + Work Orders)
-☑ EF Core + PostgreSQL — migrations, OwnsOne, enums as strings
-☑ Domain Model — aggregates, value objects, domain events
-☑ REST API — controllers, OpenAPI, Swagger UI
-☑ Global Exception Middleware — typed error responses
-☑ Docker Compose — PostgreSQL container, port isolation
-☑ Angular 20 frontend — Dashboard, Batches, Create, Details, Work Orders, Quarantine modal
-☑ MCP Server — 3 tools for AI agents
-☑ 59 automated tests — Domain, Application, API, Integration
-□ OAuth 2.0 with OpenIddict — PKCE, RBAC, refresh tokens
-□ SignalR — real-time batch status updates
-□ Hangfire — QC reminders, stale batch alerts
-□ Redis — caching for dashboard aggregations
-□ Playwright E2E tests — full user journey
-License
+---
+
+## Tech Stack
+
+| Layer | Technology |
+| :--- | :--- |
+| **Runtime** | .NET 10 (LTS until Nov 2028) |
+| **Language** | C# 14 |
+| **API** | ASP.NET Core 10, Controllers |
+| **OpenAPI** | Microsoft.AspNetCore.OpenApi 10 + Swashbuckle SwaggerUI |
+| **MCP** | ModelContextProtocol.AspNetCore 2.x |
+| **CQRS** | MediatR 14 |
+| **Validation** | FluentValidation 12 |
+| **ORM** | EF Core 10 |
+| **Database** | PostgreSQL 16 (Alpine) |
+| **Logging** | Serilog |
+| **Frontend** | Angular 20 + Tailwind CSS v4 + Inter + JetBrains Mono |
+| **Design System** | Fresh Teal (Custom theme, mobile-first) |
+| **Auth (planned)** | OpenIddict (OAuth 2.0 + OIDC) |
+| **Tests** | xUnit, FluentAssertions, EF Core InMemory, SQLite |
+| **Container** | Docker Compose |
+
+---
+
+## Roadmap
+
+- [x] Clean Architecture — 4 layers, DI, testable
+- [x] CQRS with MediatR — 10 features (Batches + Work Orders)
+- [x] EF Core + PostgreSQL — migrations, OwnsOne, enums as strings
+- [x] Domain Model — aggregates, value objects, domain events
+- [x] REST API — controllers, OpenAPI, Swagger UI
+- [x] Global Exception Middleware — typed error responses
+- [x] Docker Compose — PostgreSQL container, port isolation
+- [x] Angular 20 frontend — Dashboard, Batches, Create, Details, Work Orders, Quarantine modal
+- [x] **MCP Server** — 3 tools for AI agents
+- [x] 59 automated tests — Domain, Application, API, Integration
+- [ ] OAuth 2.0 with OpenIddict — PKCE, RBAC, refresh tokens
+- [ ] SignalR — real-time batch status updates
+- [ ] Hangfire — QC reminders, stale batch alerts
+- [ ] Redis — caching for dashboard aggregations
+- [ ] Playwright E2E tests — full user journey
+
+---
+
+## License
+
 MIT © 2026 Mohammad Al-Shahrour
 
-Built with C# / ASP.NET Core, Angular, PostgreSQL — and an MCP server for AI agents.
+---
+
+*Built with C# / ASP.NET Core, Angular, PostgreSQL — and an MCP server for AI agents.*
