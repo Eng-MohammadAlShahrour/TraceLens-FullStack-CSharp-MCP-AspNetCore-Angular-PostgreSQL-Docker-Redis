@@ -27,3 +27,12 @@ frontend/playwright-report/
 frontend/test-results/
 frontend/playwright/.cache/
 frontend/.playwright/
+
+# Local backups
+*.backup-*
+*.bak
+*.bak-*
+
+# Worker bin/obj
+src/TraceLens.Worker/bin/
+src/TraceLens.Worker/obj/

@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
+using TraceLens.Application.Common.Events;
 using TraceLens.Application.Common.Interfaces;
 using TraceLens.Application.Features.Batches.GetBatchById;
 using TraceLens.Domain.Enums;
@@ -9,16 +10,40 @@ namespace TraceLens.Application.Features.Batches.FailQC;
 public sealed class FailQCCommandHandler : IRequestHandler<FailQCCommand, BatchDto>
 {
     private readonly IApplicationDbContext _context;
+    private readonly IBatchNotifier _notifier;
+    private readonly IEventPublisher _publisher;
 
-    public FailQCCommandHandler(IApplicationDbContext context) => _context = context;
+    public FailQCCommandHandler(
+        IApplicationDbContext context,
+        IBatchNotifier notifier,
+        IEventPublisher publisher)
+    {
+        _context = context;
+        _notifier = notifier;
+        _publisher = publisher;
+    }
 
     public async Task<BatchDto> Handle(FailQCCommand request, CancellationToken ct)
     {
         var batch = await _context.Batches.FirstOrDefaultAsync(b => b.Id == request.Id, ct)
             ?? throw new InvalidOperationException($"Batch {request.Id} not found.");
 
+        var previousStatus = batch.Status.ToString();
+
         batch.MarkQCCompleted(QualityCheckResult.Failed);
         await _context.SaveChangesAsync(ct);
+
+        await _notifier.NotifyBatchStatusChangedAsync(
+            batch.Id, batch.BatchNumber.Value, batch.Status.ToString(), ct);
+
+        await _publisher.PublishAsync(new BatchStatusChangedIntegrationEvent(
+            batch.Id,
+            batch.BatchNumber.Value,
+            previousStatus,
+            batch.Status.ToString(),
+            null,
+            DateTime.UtcNow),
+            ct);
 
         return new BatchDto(batch.Id, batch.BatchNumber.Value, batch.Status.ToString(),
             batch.ProducedQuantity.Value, batch.ProducedQuantity.Unit,

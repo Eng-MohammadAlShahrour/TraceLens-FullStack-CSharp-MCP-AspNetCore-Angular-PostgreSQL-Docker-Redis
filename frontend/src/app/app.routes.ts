@@ -38,5 +38,10 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () => import('./features/mcp-playground/mcp-playground').then(m => m.McpPlayground)
   },
+  {
+    path: 'activity',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/activity/activity').then(m => m.Activity)
+  },
   { path: '**', redirectTo: 'dashboard' }
 ];

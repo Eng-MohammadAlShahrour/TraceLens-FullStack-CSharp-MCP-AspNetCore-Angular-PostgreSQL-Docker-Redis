@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using OpenIddict.EntityFrameworkCore.Models;
 using TraceLens.Application.Common.Interfaces;
 using TraceLens.Domain.Common;
@@ -14,12 +14,11 @@ public sealed class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<Batch> Batches => Set<Batch>();
     public DbSet<MaterialLot> MaterialLots => Set<MaterialLot>();
     public DbSet<WorkOrder> WorkOrders => Set<WorkOrder>();
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        // OpenIddict tables (Applications, Authorizations, Scopes, Tokens)
         modelBuilder.UseOpenIddict();
-
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
         base.OnModelCreating(modelBuilder);
     }
@@ -30,10 +29,9 @@ public sealed class ApplicationDbContext : DbContext, IApplicationDbContext
         {
             if (entry.State == EntityState.Modified)
             {
-                // UpdatedAt is protected; use reflection fallback only if needed
+                // UpdatedAt is protected
             }
         }
-
         return await base.SaveChangesAsync(cancellationToken);
     }
 }

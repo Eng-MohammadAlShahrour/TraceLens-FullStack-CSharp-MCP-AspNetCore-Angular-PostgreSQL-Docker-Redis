@@ -1,6 +1,7 @@
-using System.Text;
+﻿using System.Text;
 using Hangfire;
 using Hangfire.PostgreSql;
+using MassTransit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -11,6 +12,7 @@ using TraceLens.API.Hubs;
 using TraceLens.API.Jobs;
 using TraceLens.API.Middleware;
 using TraceLens.API.Notifications;
+using TraceLens.API.Publishers;
 using TraceLens.Application;
 using TraceLens.Application.Common.Interfaces;
 using TraceLens.Infrastructure;
@@ -82,6 +84,27 @@ builder.Services.AddScoped<CheckStaleBatchesJob>();
 builder.Services.AddMcpServer().WithHttpTransport().WithToolsFromAssembly();
 builder.Services.AddSignalR();
 builder.Services.AddScoped<IBatchNotifier, SignalRBatchNotifier>();
+
+// RabbitMQ / MassTransit
+var rabbitSection = builder.Configuration.GetSection("RabbitMq");
+var rabbitHost = rabbitSection["Host"] ?? "localhost";
+var rabbitVHost = rabbitSection["VirtualHost"] ?? "/";
+var rabbitUser = rabbitSection["Username"] ?? "guest";
+var rabbitPass = rabbitSection["Password"] ?? "guest";
+
+builder.Services.AddMassTransit(x =>
+{
+    x.UsingRabbitMq((context, cfg) =>
+    {
+        cfg.Host(rabbitHost, rabbitVHost, h =>
+        {
+            h.Username(rabbitUser);
+            h.Password(rabbitPass);
+        });
+    });
+});
+
+builder.Services.AddScoped<IEventPublisher, MassTransitEventPublisher>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

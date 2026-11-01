@@ -28,6 +28,7 @@
     <ProjectReference Include="..\..\src\TraceLens.Application\TraceLens.Application.csproj" />
     <ProjectReference Include="..\..\src\TraceLens.Infrastructure\TraceLens.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\TraceLens.API\TraceLens.API.csproj" />
+    <ProjectReference Include="..\..\src\TraceLens.Worker\TraceLens.Worker.csproj" />
   </ItemGroup>
 
 </Project>
