@@ -122,7 +122,6 @@ Batch (AggregateRoot)
 
 TraceLens exposes a **Model Context Protocol** server over HTTP at `/mcp`. AI agents (Claude Desktop, Cursor, VS Code, etc.) can call 3 tools backed by the same CQRS handlers and PostgreSQL data.
 
-![MCP Inspector](docs/screenshots/mcp.png)
 
 | Tool | Purpose | Parameters |
 | :--- | :--- | :--- |
