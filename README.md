@@ -2,7 +2,7 @@
 
 > Manufacturing batch traceability — end to end
 
-A full-stack **C# / ASP.NET Core 10 + Angular 20** platform that tracks every production batch — which raw material lots went into it, which quality checks it passed, and which customer received it. Strict state machine, full audit trail, domain events, 59 automated tests, and an **MCP server for AI agents**.
+A full-stack **C# / ASP.NET Core 10 + Angular 20** platform that tracks every production batch — which raw material lots went into it, which quality checks it passed, and which customer received it. Strict state machine, full audit trail, domain events, 86 automated tests, and an **MCP server for AI agents**.
 
 [![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)](https://dotnet.microsoft.com)
 [![C#](https://img.shields.io/badge/C%23-14-239120?style=for-the-badge&logo=csharp&logoColor=white)](https://learn.microsoft.com/dotnet/csharp/)
@@ -11,8 +11,9 @@ A full-stack **C# / ASP.NET Core 10 + Angular 20** platform that tracks every pr
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org)
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://docker.com)
 [![MCP](https://img.shields.io/badge/MCP-Model_Context_Protocol-blueviolet?style=for-the-badge)](https://modelcontextprotocol.io)
-[![Tests](https://img.shields.io/badge/Tests-59_passing-success?style=for-the-badge)](tests/)
+[![Tests](https://img.shields.io/badge/Tests-86_passing-success?style=for-the-badge)](tests/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
+
 ---
 
 ## What it does
@@ -205,7 +206,7 @@ TraceLens ships with a built-in **MCP Playground** at `http://localhost:4200/mcp
 
 ---
 
-## Testing — 59 tests passing
+## Testing — 86 tests passing
 
 ```bash
 dotnet test
@@ -213,10 +214,11 @@ dotnet test
 
 | Suite | Tests | Coverage |
 |---|---|---|
-| Domain (Batch, BatchNumber, Quantity) | 31 | State transitions, guard conditions, ValueObject validation |
-| Application (Validators, Handlers) | 18 | CQRS commands, validation pipeline, pagination |
-| API (Controllers) | 6 | HTTP responses, mediator wiring |
-| Integration (SQLite) | 4 | OwnsOne round-trip, unique indexes, enum-as-string |
+| **Domain** (Batch, BatchNumber, Quantity, WorkOrder) | 44 | State transitions, guard conditions, ValueObject validation |
+| **Application** (Validators, Handlers) | 32 | CQRS commands, validation pipeline, pagination |
+| **API** (Controllers) | 6 | HTTP responses, mediator wiring |
+| **Integration** (SQLite) | 4 | OwnsOne round-trip, unique indexes, enum-as-string |
+| **Total** | **86** | All green ✅ |
 
 ---
 
@@ -279,10 +281,10 @@ Installing an external MCP client (Inspector, Claude Desktop) creates friction f
 - [x] REST API — controllers, OpenAPI, Swagger UI
 - [x] Global Exception Middleware — typed error responses
 - [x] Docker Compose — PostgreSQL container, port isolation
-- [x] Angular 20 frontend — Dashboard, Batches, Create, Details, Work Orders, Quarantine modal
+- [x] Angular 20 frontend — Dashboard (real API stats), Batches, Create, Details, Work Orders, Quarantine modal, MCP Playground
 - [x] MCP Server — 3 tools for AI agents
 - [x] MCP Playground — live browser UI to test all 3 tools
-- [x] 59 automated tests — Domain, Application, API, Integration
+- [x] 86 automated tests — Domain (incl. WorkOrder), Application, API, Integration
 - [ ] OAuth 2.0 with OpenIddict — PKCE, RBAC, refresh tokens
 - [ ] SignalR — real-time batch status updates
 - [ ] Hangfire — QC reminders, stale batch alerts
