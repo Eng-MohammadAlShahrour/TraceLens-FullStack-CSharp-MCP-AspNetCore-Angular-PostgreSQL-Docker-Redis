@@ -14,6 +14,12 @@ builder.Host.UseSerilog((context, config) =>
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
+// ── MCP Server ──
+builder.Services
+    .AddMcpServer()
+    .WithHttpTransport()
+    .WithToolsFromAssembly();
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
@@ -42,6 +48,9 @@ app.UseSerilogRequestLogging();
 app.UseCors("Frontend");
 app.UseAuthorization();
 app.MapControllers();
+
+// ── MCP endpoint ──
+app.MapMcp("/mcp");
 
 if (app.Environment.IsDevelopment())
 {
