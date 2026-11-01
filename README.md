@@ -151,6 +151,7 @@ curl -X POST http://localhost:5268/mcp \
 - **Clean Architecture preserved** — MCP is just another entry point, not a new project.
 
 ---
+| **MCP Playground** | **Built-in Angular UI to test all 3 MCP tools live from the browser** |
 
 ## Testing — 59 tests passing
 
