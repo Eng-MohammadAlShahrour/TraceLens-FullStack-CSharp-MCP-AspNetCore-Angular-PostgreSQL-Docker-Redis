@@ -416,7 +416,7 @@ Installing an external MCP client (Inspector, Claude Desktop) creates friction f
 - [x] SignalR — real-time batch notifications (hub + notifier + Angular subscriptions)
 - [x] OAuth 2.0 with OpenIddict — password grant + refresh tokens, JWE-encrypted tokens
 - [x] 87 automated tests — Domain (incl. WorkOrder), Application, API, Integration
-- [ ] OAuth 2.0 — PKCE flow + RBAC roles
+- [ ] Playwright E2E tests — full user journey
 - [ ] Hangfire — QC reminders, stale batch alerts
 - [ ] Redis — caching for dashboard aggregations
 - [ ] Playwright E2E tests — full user journey
