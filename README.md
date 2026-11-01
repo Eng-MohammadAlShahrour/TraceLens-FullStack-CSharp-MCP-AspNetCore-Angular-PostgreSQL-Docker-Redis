@@ -1,18 +1,10 @@
-<div align="center">
-  
-  # TraceLens
-  
-  **Manufacturing batch traceability — end to end**
-  
-  A full-stack **C# / ASP.NET Core 10 + Angular 20** platform that tracks every production batch — which raw material lots went into it, which quality checks it passed, and which customer received it. Strict state machine, full audit trail, domain events, real-time updates, **OAuth 2.0 authentication**, **async event pipeline** via RabbitMQ, **97 automated tests**, **11 Playwright E2E tests**, background jobs via Hangfire, **Redis caching** (30s TTL), and an **MCP server for AI agents**.
+# TraceLens
 
-</div>
+> Manufacturing batch traceability — end to end
 
-<p align="center">
-  <img src="docs/tracelens-show.gif" alt="TraceLens Demo" width="900" />
-</p>
+A full-stack **C# / ASP.NET Core 10 + Angular 20** platform that tracks every production batch — which raw material lots went into it, which quality checks it passed, and which customer received it. Strict state machine, full audit trail, domain events, real-time updates, **OAuth 2.0 authentication**, **async event pipeline** via RabbitMQ, **97 automated tests**, **11 Playwright E2E tests**, background jobs via Hangfire, **Redis caching** (30s TTL), and an **MCP server for AI agents**.
 
-<div align="center">
+![TraceLens Demo](docs/tracelens-show.gif)
 
 [![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)](https://dotnet.microsoft.com)
 [![C#](https://img.shields.io/badge/C%23-14-239120?style=for-the-badge&logo=csharp&logoColor=white)](https://learn.microsoft.com/dotnet/csharp/)
@@ -31,8 +23,6 @@
 [![E2E](https://img.shields.io/badge/E2E-11_passing-blue?style=for-the-badge&logo=playwright)](frontend/e2e)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 
-</div>
-
 ---
 
 ## What it does
@@ -48,10 +38,10 @@
 | **Rich domain model** | Invalid transitions throw at the domain level |
 | **Clean architecture** | Domain → Application → Infrastructure → API + Worker |
 | **CQRS** | MediatR handlers + FluentValidation pipeline |
-| **Angular 20 frontend** | Dashboard, Batches, Create, Details, Work Orders, MCP Playground, **Activity Stream** |
+| **Angular 20 frontend** | Dashboard (real API stats), Batches, Create, Details, Work Orders, MCP Playground, **Activity Stream** |
 | **Dashboard KPIs** | Live counts from PostgreSQL — Total, InProduction, QCPassed, Quarantined, QC success rate |
-| **SignalR real-time** | Live updates on every batch event (no refresh) |
-| **OAuth 2.0 (OpenIddict)** | Embedded authorization server — password + refresh, JWE-encrypted tokens |
+| **SignalR real-time** | Live dashboard + batches updates on every batch event (no refresh) |
+| **OAuth 2.0 (OpenIddict)** | Embedded authorization server — password grant + refresh tokens, JWE-encrypted tokens |
 | **RabbitMQ + MassTransit** | 2 integration events published by 6 handlers → 2 Worker consumers → audit_logs |
 | **Worker (IHostedService)** | TraceLens.Worker consumes events, writes to audit_logs, ready for Slack/email hooks |
 | **Activity Stream** | Real-time audit log in Angular — polling × 3 after SignalR to catch async Worker writes |
@@ -60,7 +50,7 @@
 | **Background jobs (Hangfire)** | Hourly stale-batch detection + protected dashboard at `/hangfire` |
 | **Redis cache** | 30s TTL for batches list queries + invalidation on create — 8x faster second call |
 | **Observability** | Serilog + OpenAPI + Swagger UI |
-| **E2E tested** | 11 Playwright tests — auth, batches, MCP, SignalR, Activity, Hangfire |
+| **E2E tested** | 11 Playwright tests — auth, batches, MCP, SignalR real-time, Activity, Hangfire |
 
 ---
 
@@ -100,15 +90,15 @@ MCP	http://localhost:5268/mcp
 OAuth Token Endpoint	http://localhost:5268/connect/token
 Hangfire Dashboard	http://localhost:5268/hangfire
 RabbitMQ Management UI	http://localhost:15672 (guest / guest)
-Containers use host ports 5433 (PostgreSQL), 6379 (Redis), 5672 (RabbitMQ AMQP), 15672 (RabbitMQ UI).
+Containers use host ports 5433 (PostgreSQL), 6379 (Redis), 5672 (RabbitMQ AMQP), and 15672 (RabbitMQ UI) to avoid conflicts with local services.
 
 Architecture
 6-Project Solution (Clean Architecture + Worker)
 Project	Purpose	Tech
 TraceLens.Domain	Aggregates, Value Objects, Enums, Domain Events, AuditLog	Pure C#
 TraceLens.Application	CQRS, MediatR, FluentValidation, IEventPublisher, IntegrationEvents	MediatR 14
-TraceLens.Infrastructure	ApplicationDbContext, configs, migrations, seeder, Auth	EF Core 10 + Npgsql
-TraceLens.API	Controllers, middleware, MCP, SignalR, Hangfire, Publishers	ASP.NET Core 10
+TraceLens.Infrastructure	ApplicationDbContext, configurations, migrations, seeder, Auth	EF Core 10 + Npgsql
+TraceLens.API	Controllers, middleware, OpenAPI, Serilog, MCP tools, SignalR hubs, Hangfire jobs, Publishers	ASP.NET Core 10
 TraceLens.Worker	Console + IHostedService, 2 MassTransit Consumers	MassTransit.RabbitMQ 8.3
 TraceLens.Tests	97 tests (Domain + Application + API + Integration + Jobs + Worker)	xUnit + FluentAssertions
 frontend/	Angular SPA + Playwright E2E	Angular 20 + Tailwind v4
@@ -203,13 +193,15 @@ json
   "role": "Admin"
 }
 Why this matters
-Real OAuth 2.0 server — not JWT-only. Token issuance, validation, and refresh flow through OpenIddict.
+Real OAuth 2.0 server — not JWT-only. Token issuance, validation, and refresh all flow through OpenIddict.
 
-JWE-encrypted tokens — access tokens use RSA-OAEP + A256CBC-HS512, so a leaked token can't be decoded.
+JWE-encrypted tokens — access tokens use RSA-OAEP + A256CBC-HS512, so a leaked token can't be decoded by third parties.
 
-Angular integration — the SPA calls /connect/token directly, stores the JWE, attaches via functional HTTP interceptor.
+Angular integration — the SPA calls /connect/token directly, stores the JWE, and attaches it via a functional HTTP interceptor.
 
-Clean Architecture preserved — IAuthService in Application; JwtAuthService + OpenIddict config in Infrastructure/API.
+Clean Architecture preserved — IAuthService lives in Application; JwtAuthService + OpenIddict config live in Infrastructure/API.
+
+OpenIddict is the default authentication scheme — legacy JWT remains as a fallback, so existing callers don't break during migration.
 
 Message Broker (RabbitMQ + MassTransit)
 TraceLens publishes integration events to RabbitMQ via MassTransit 8.3.6 — decoupling side effects (audit trail, future Slack/email) from the request path.
@@ -260,15 +252,15 @@ info: MassTransit[0] Configured endpoint BatchCreated, Consumer: ...BatchCreated
 info: MassTransit[0] Configured endpoint BatchStatusChanged, Consumer: ...BatchStatusChangedConsumer
 info: MassTransit[0] Bus started: rabbitmq://localhost/
 Real-time updates (SignalR)
-Every batch created or status changed — from REST, MCP, or Angular UI — broadcasts a SignalR event at /hubs/batches.
+Every batch created or status changed — from REST, MCP, or the Angular UI — broadcasts a SignalR event at /hubs/batches.
 
 The Angular frontend:
 
 Auto-reconnects with exponential backoff
 
-Refreshes the dashboard KPIs live — no manual refresh
+Refreshes the dashboard KPIs live — no manual refresh needed
 
-Prepends new batches to the list as they arrive
+Prepends new batches to the batches list as they arrive
 
 Updates /activity stream — polls × 3 (400ms, 1000ms, 2000ms) after each event to catch async Worker writes
 
@@ -277,7 +269,7 @@ Open http://localhost:4200/dashboard in one tab
 
 Open http://localhost:4200/mcp in another tab
 
-In MCP Playground, execute create_batch
+In the MCP Playground, execute create_batch with any batch number
 
 Watch:
 
@@ -292,37 +284,65 @@ MCP Playground → POST /mcp → MediatR → PostgreSQL INSERT
     ├─→ IBatchNotifier → SignalR → Dashboard/Activity refetch → UI updates ✅
     └─→ IBus.Publish → RabbitMQ exchange → Queue → Worker → audit_logs ✅
 Background jobs (Hangfire)
-TraceLens uses Hangfire (with PostgreSQL storage) to run scheduled background jobs. Dashboard at http://localhost:5268/hangfire (localhost-only in dev).
+TraceLens uses Hangfire (with PostgreSQL storage) to run scheduled background jobs. The Hangfire Dashboard is available at http://localhost:5268/hangfire (protected — only accessible from localhost in development).
 
 Jobs
 Job	Schedule	Purpose
-check-stale-batches	Hourly	Detects batches stuck in InProduction > 24h and logs a warning
-Why Hangfire?
-Stale-batch detection should not block HTTP requests and must run even when no user is active. Hangfire provides durable scheduling (PostgreSQL-backed), automatic retries, and a monitoring dashboard — all without custom cron code.
+check-stale-batches	Hourly	Detects batches stuck in InProduction for > 24h and logs a warning via ILogger
+How it works
+On API startup, RecurringJobManager.AddOrUpdate<CheckStaleBatchesJob> registers the hourly job.
+
+Hangfire stores job metadata in PostgreSQL (schema: hangfire — created automatically).
+
+Every hour, CheckStaleBatchesJob.Run queries batches where status = InProduction AND started_at < now - 24h.
+
+Any stale batch is logged via Serilog ([WRN] STALE BATCH: {BatchNumber} in production since {StartedAt}).
+
+Viewing the dashboard
+Open http://localhost:5268/hangfire from localhost. You'll see:
+
+Recurring Jobs → check-stale-batches (Hourly)
+
+Servers → 1 server online (20 workers)
+
+Succeeded / Failed history
+
+Production note: the current filter allows only localhost/127.0.0.1. For production, replace HangfireAuthorizationFilter with a real authentication scheme (e.g., [Authorize] on the dashboard endpoint).
 
 Caching (Redis)
-TraceLens uses Redis 7 (Alpine) as a distributed cache for read-heavy queries. GetBatchesListQueryHandler caches paginated lists for 30 seconds (TTL) — subsequent identical requests return from Redis in ~10ms.
+TraceLens uses Redis 7 (Alpine) as a distributed cache for read-heavy queries. The GetBatchesListQueryHandler caches paginated batch lists for 30 seconds (TTL) — subsequent identical requests return from Redis in ~10ms instead of hitting PostgreSQL.
 
 How it works
-GetBatchesListQuery → IDistributedCache key batches:list:p{page}:s{size}
+GetBatchesListQuery → checks IDistributedCache with key batches:list:p{page}:s{size}
 
-HIT → JSON returned (~10ms)
+HIT → JSON deserialized and returned (~10ms)
 
-MISS → PostgreSQL → write to Redis with 30s TTL (~100-500ms)
+MISS → query PostgreSQL → write to Redis with 30s TTL (~100-500ms)
 
-CreateBatchCommandHandler → invalidates common cache keys (s5, s20, s100) after insert
+CreateBatchCommandHandler → invalidates common cache keys (s5, s20, s100) after insert — new batches appear immediately
+
+Why 30s TTL + invalidation?
+TTL alone = stale data for up to 30s after creating a batch — bad UX
+
+Invalidation alone = still miss for other pages/sizes
+
+Combined = fresh data on writes, fast reads for repeats (dashboard polling, page navigation)
 
 Measured impact
 text
 First call  (MISS):  511 ms
 Second call (HIT):    66 ms  → 7.8x faster
 Resilience
-Redis is a cache, not a dependency. All operations are try/catch — the API falls through to PostgreSQL if Redis is down.
+If Redis is down, all cache operations are wrapped in try/catch — the API falls through to PostgreSQL without errors. Redis is a cache, not a dependency.
 
-Verify
+Verify manually
 powershell
+# Check keys
 docker exec tracelens-redis redis-cli KEYS "TraceLens:*"
 # → TraceLens:batches:list:p1:s20
+
+# Inspect a value
+docker exec tracelens-redis redis-cli GET "TraceLens:batches:list:p1:s20"
 Activity Stream (Angular)
 The /activity page displays the audit trail in real time — powered by RabbitMQ consumers writing to audit_logs.
 
@@ -339,11 +359,11 @@ No page refresh needed — new rows appear automatically
 No fake data — every row is a real persisted audit log, produced by a real MassTransit consumer.
 
 MCP Server (Model Context Protocol)
-TraceLens exposes a Model Context Protocol server over HTTP at /mcp. AI agents (Claude Desktop, Cursor, VS Code) can call 3 tools backed by the same CQRS handlers.
+TraceLens exposes a Model Context Protocol server over HTTP at /mcp. AI agents (Claude Desktop, Cursor, VS Code, etc.) can call 3 tools backed by the same CQRS handlers and PostgreSQL data.
 
 Tool	Purpose	Parameters
-get_batches_by_status	Filter batches by status	status (string)
-get_work_orders	List work orders	—
+get_batches_by_status	Filter batches by lifecycle status	status (string)
+get_work_orders	List all production work orders	—
 create_batch	Create a new batch	batchNumber, workOrderId, productId, producedQuantity, producedQuantityUnit
 Connect from real AI clients
 Claude Desktop (claude_desktop_config.json):
@@ -351,7 +371,9 @@ Claude Desktop (claude_desktop_config.json):
 json
 {
   "mcpServers": {
-    "tracelens": { "url": "http://localhost:5268/mcp" }
+    "tracelens": {
+      "url": "http://localhost:5268/mcp"
+    }
   }
 }
 Cursor (.cursor/mcp.json):
@@ -359,7 +381,9 @@ Cursor (.cursor/mcp.json):
 json
 {
   "mcpServers": {
-    "tracelens": { "url": "http://localhost:5268/mcp" }
+    "tracelens": {
+      "url": "http://localhost:5268/mcp"
+    }
   }
 }
 VS Code (settings.json):
@@ -368,18 +392,40 @@ json
 "mcp.servers": {
   "tracelens": { "url": "http://localhost:5268/mcp" }
 }
-Then ask: "Show me all batches currently in production" — the AI calls get_batches_by_status({ status: "InProduction" }).
+Then ask any of them: "Show me all batches currently in production" — the AI will call get_batches_by_status({ status: "InProduction" }).
+
+Connect via MCP Inspector
+bash
+npx @modelcontextprotocol/inspector --url http://localhost:5268/mcp
+Call a tool (JSON-RPC)
+bash
+curl -X POST http://localhost:5268/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"get_work_orders","arguments":{}}}'
+Why this is a real AI integration
+No duplicate logic — every tool calls the same ISender (MediatR) used by REST endpoints.
+
+No fake data — tools query PostgreSQL via EF Core.
+
+Clean Architecture preserved — MCP is just another entry point, not a new project.
+
+Meaningful error messages — McpException surfaces domain and validation errors (e.g. "A batch with the same number already exists") instead of generic SDK wrappers.
 
 MCP Playground (Angular UI)
-Built-in MCP Playground at http://localhost:4200/mcp:
+TraceLens ships with a built-in MCP Playground at http://localhost:4200/mcp — a browser-based UI to call all 3 tools live and inspect raw JSON-RPC responses.
 
-3 tabs per response — Pretty (structured), Raw JSON (highlighted), Meta (timing, size)
+3 tabs per response — Pretty (structured tables), Raw JSON (syntax highlighted), Meta (duration, size, timestamp, arguments)
 
-Live timing & response size
+Live timing & response size for every call
 
-Copy and Download .json
+Copy and Download .json per response
 
-Full end-to-end loop: Angular → POST /mcp (JSON-RPC 2.0 + SSE) → MediatR → EF Core → PostgreSQL
+Success / Error badges with cleaned error messages
+
+Full end-to-end loop: Angular → POST /mcp (JSON-RPC 2.0 + SSE) → MediatR → EF Core → PostgreSQL → back to UI
+
+No external tool needed — no MCP Inspector, no Postman
 
 E2E Testing — 11 Playwright tests
 bash
@@ -391,8 +437,8 @@ Spec	Tests	Coverage
 auth.spec.ts	3	Redirect to login, valid OAuth login, invalid credentials error
 batches.spec.ts	2	List loads, create batch and see it in list
 mcp.spec.ts	2	get_work_orders returns data, create_batch via MCP → visible
-signalr.spec.ts	1	New batch via MCP appears on dashboard without refresh
-hangfire.spec.ts	1	Hangfire dashboard accessible on localhost
+signalr.spec.ts	1	New batch via MCP appears on dashboard without refresh (real-time)
+hangfire.spec.ts	1	Hangfire dashboard accessible on localhost (protected)
 activity.spec.ts	2	Activity page loads, new MCP batch appears automatically
 Total	11	All green ✅
 Requires PostgreSQL + Redis + RabbitMQ + API + Worker + Angular running. Uses Page Object Model (e2e/pages/LoginPage.ts).
@@ -404,8 +450,8 @@ Get-Process -Name "TraceLens.API","TraceLens.Worker" -ErrorAction SilentlyContin
 Start-Sleep -Seconds 3
 dotnet test
 Suite	Tests	Coverage
-Domain (Batch, BatchNumber, Quantity, WorkOrder)	44	State transitions, guard conditions, VO validation
-Application (Validators, Handlers)	35	CQRS, validation pipeline, pagination, SignalR verification, Activity query
+Domain (Batch, BatchNumber, Quantity, WorkOrder)	44	State transitions, guard conditions, ValueObject validation
+Application (Validators, Handlers)	35	CQRS commands, validation pipeline, pagination, SignalR verification, Activity query
 API (Controllers)	6	HTTP responses, mediator wiring
 Integration (SQLite)	4	OwnsOne round-trip, unique indexes, enum-as-string
 Jobs (CheckStaleBatches)	2	Stale-batch detection + no-op when clean
@@ -422,22 +468,28 @@ Why Rich Domain Model (not anemic)?
 Invalid state should be impossible. Batch.MarkQCCompleted(result) throws if batch is in Created state. You cannot ship an un-QC'd batch — the domain forbids it.
 
 Why Value Objects for BatchNumber and Quantity?
-Primitive obsession is a bug farm. string batchNumber can be empty or malformed. Quantity can be negative. Create() factories reject invalid values at construction.
+Primitive obsession is a bug farm. string batchNumber can be empty or malformed. Quantity can be negative. BatchNumber.Create() and Quantity.Create() reject invalid values at construction.
+
+Why OwnsOne for Quantity?
+Quantity has Value (decimal) + Unit (string). Using OwnsOne, EF Core stores them as two columns (produced_quantity_value, produced_quantity_unit) in the same table — no extra join, no loss of the unit.
+
+Why Domain Events?
+Decoupling. When a batch passes QC, we can send an email, update a dashboard, or trigger a downstream process — without touching the Batch aggregate.
 
 Why SignalR?
-Users should not have to press refresh. SignalR pushes over WebSockets. Combined with refresh$ Subject + switchMap, the dashboard refetches transparently when events arrive.
+Users should not have to press refresh to see new batches. SignalR pushes updates over WebSockets, and combined with a refresh$ Subject + switchMap, the Angular dashboard refetches transparently when events arrive — no polling, no stale UI.
 
 Why OpenIddict (OAuth 2.0) instead of plain JWT?
-Plain JWT forces every service to manage signing keys, refresh flows, revocation. OpenIddict provides a full OAuth 2.0 / OIDC server: password grant, refresh tokens, scope validation, JWE-encrypted tokens (defense-in-depth against token leakage).
+Plain JWT forces every service to manage signing keys, refresh flows, and revocation. OpenIddict provides a full OAuth 2.0 / OIDC server: password grant, refresh tokens, scope validation, and JWE-encrypted tokens (defense-in-depth against token leakage). The Angular SPA talks to /connect/token like any third-party client — no special backend coupling.
 
 Why Hangfire?
-Stale-batch detection is a background task — should not block HTTP and must run when no user is active. Hangfire provides durable scheduling, retries, and dashboard.
+Stale-batch detection is a background task — it should not block HTTP requests, and it must run even when no user is active. Hangfire provides durable scheduling (backed by PostgreSQL), automatic retries, and a monitoring dashboard — all without writing custom cron code.
 
 Why Redis (with TTL + invalidation)?
-Batch lists are read-heavy but change rarely. 30s TTL covers repeated reads; invalidation on CreateBatchCommand keeps lists fresh immediately after writes. 5-10x faster reads without sacrificing freshness.
+Batch lists are read-heavy (dashboard polls, page navigation) but change rarely (only on create). A 30s TTL cache covers repeated reads; explicit invalidation on CreateBatchCommand keeps the list fresh immediately after writes. Combined, this gives 5-10x faster response times on reads — without sacrificing write freshness. Cache operations are best-effort (try/catch) so Redis is a performance optimization, never a dependency.
 
 Why RabbitMQ + MassTransit (vs SignalR alone)?
-SignalR = ephemeral (in-process WebSocket, lost on restart, tied to connected clients). RabbitMQ = durable (persisted on disk, retryable, dead-letter, independent services consume without coupling to API process).
+SignalR = ephemeral (in-process WebSocket, lost on restart, tied to connected clients). RabbitMQ = durable (persisted on disk, retryable, dead-letter, independent services consume without coupling to the API process).
 
 SignalR for UI freshness (~5ms).
 
@@ -460,7 +512,10 @@ Why polling × 3 on /activity?
 API SignalR fires before Worker writes to audit_logs (async gap: 0-2000ms). A single poll after 500ms can miss the write. Three retries (400ms, 1000ms, 2000ms) cover 99% of cases without constant polling (which would waste API + DB resources). This is event-triggered polling — the pragmatic solution before adding Worker→SignalR (which would require a second WebSocket client).
 
 Why MCP Server?
-To let AI agents interact with TraceLens data through a standardized protocol. Tools call the same CQRS handlers as REST — no duplicate logic, no fake data.
+To let AI agents (Claude Desktop, Cursor, VS Code) interact with TraceLens data through a standardized protocol. Tools call the same CQRS handlers as REST endpoints — no duplicate logic, no fake data.
+
+Why a built-in MCP Playground?
+Installing an external MCP client (Inspector, Claude Desktop) creates friction for reviewers. The Angular Playground lets anyone verify the integration in one click, from the browser, with structured tables and syntax-highlighted JSON — proving the MCP server is not just "configured" but actively consumed by the frontend.
 
 Tech Stack
 Layer	Technology
@@ -494,19 +549,19 @@ Roadmap
 ☑ Domain Model — aggregates, value objects, domain events
 ☑ REST API — controllers, OpenAPI, Swagger UI
 ☑ Global Exception Middleware — typed error responses
-☑ Docker Compose — PostgreSQL + Redis + RabbitMQ, port isolation
-☑ Angular 20 frontend — Dashboard, Batches, Create, Details, Work Orders, MCP Playground, Activity Stream
+☑ Docker Compose — PostgreSQL + Redis + RabbitMQ containers, port isolation
+☑ Angular 20 frontend — Dashboard, Batches, Create, Details, Work Orders, Quarantine modal, MCP Playground, Activity Stream
 ☑ MCP Server — 3 tools for AI agents
 ☑ MCP Playground — live browser UI to test all 3 tools
-☑ SignalR — real-time updates (hub + notifier + Angular subscriptions)
-☑ OAuth 2.0 with OpenIddict — password grant + refresh, JWE tokens
+☑ SignalR — real-time batch notifications (hub + notifier + Angular subscriptions)
+☑ OAuth 2.0 with OpenIddict — password grant + refresh tokens, JWE-encrypted tokens
 ☑ Hangfire — hourly stale-batch detection + protected dashboard
 ☑ Redis — 30s TTL cache for batches list + invalidation on create
 ☑ RabbitMQ + MassTransit — 2 integration events × 6 publishers × 2 consumers
 ☑ TraceLens.Worker — Console + IHostedService, audit_logs persistence
 ☑ Activity Stream UI — real-time audit log in Angular
 ☑ Playwright E2E tests — 11 tests (auth, batches, mcp, signalr, hangfire, activity)
-☑ 97 automated tests — Domain, Application, API, Integration, Jobs, Worker
+☑ 97 automated tests — Domain (incl. WorkOrder), Application, API, Integration, Jobs, Worker
 License
 MIT © 2026 Mohammad Al-Shahrour
 
