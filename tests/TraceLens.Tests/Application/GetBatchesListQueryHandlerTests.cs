@@ -1,4 +1,6 @@
 using FluentAssertions;
+using Microsoft.Extensions.Caching.Distributed;
+using NSubstitute;
 using TraceLens.Application.Features.Batches.GetBatchesList;
 using TraceLens.Domain.Entities;
 using TraceLens.Domain.ValueObjects;
@@ -15,7 +17,7 @@ public class GetBatchesListQueryHandlerTests
     public async Task Handle_EmptyDb_ReturnsEmptyList()
     {
         await using var db = TestDbContextFactory.CreateInMemory();
-        var handler = new GetBatchesListQueryHandler(db);
+        var handler = new GetBatchesListQueryHandler(db, Substitute.For<IDistributedCache>());
 
         var response = await handler.Handle(new GetBatchesListQuery(), CancellationToken.None);
 
@@ -30,7 +32,7 @@ public class GetBatchesListQueryHandlerTests
         db.Batches.AddRange(MakeBatch("B-001"), MakeBatch("B-002"), MakeBatch("B-003"));
         await db.SaveChangesAsync();
 
-        var handler = new GetBatchesListQueryHandler(db);
+        var handler = new GetBatchesListQueryHandler(db, Substitute.For<IDistributedCache>());
         var response = await handler.Handle(new GetBatchesListQuery(), CancellationToken.None);
 
         response.Items.Should().HaveCount(3);
@@ -44,7 +46,7 @@ public class GetBatchesListQueryHandlerTests
         for (int i = 1; i <= 10; i++) db.Batches.Add(MakeBatch($"B-{i:000}"));
         await db.SaveChangesAsync();
 
-        var handler = new GetBatchesListQueryHandler(db);
+        var handler = new GetBatchesListQueryHandler(db, Substitute.For<IDistributedCache>());
         var response = await handler.Handle(new GetBatchesListQuery(Page: 2, PageSize: 3), CancellationToken.None);
 
         response.Items.Should().HaveCount(3);
@@ -62,7 +64,7 @@ public class GetBatchesListQueryHandlerTests
         db.Batches.AddRange(older, newer);
         await db.SaveChangesAsync();
 
-        var handler = new GetBatchesListQueryHandler(db);
+        var handler = new GetBatchesListQueryHandler(db, Substitute.For<IDistributedCache>());
         var response = await handler.Handle(new GetBatchesListQuery(), CancellationToken.None);
 
         response.Items.First().BatchNumber.Should().Be("B-002");
@@ -75,7 +77,7 @@ public class GetBatchesListQueryHandlerTests
         for (int i = 1; i <= 5; i++) db.Batches.Add(MakeBatch($"B-{i:000}"));
         await db.SaveChangesAsync();
 
-        var handler = new GetBatchesListQueryHandler(db);
+        var handler = new GetBatchesListQueryHandler(db, Substitute.For<IDistributedCache>());
         var response = await handler.Handle(new GetBatchesListQuery(Page: 1, PageSize: 9999), CancellationToken.None);
 
         response.PageSize.Should().Be(100); // clamped

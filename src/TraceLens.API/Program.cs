@@ -23,6 +23,14 @@ builder.Host.UseSerilog((context, config) =>
     config.ReadFrom.Configuration(context.Configuration).WriteTo.Console());
 
 builder.Services.AddApplication();
+
+// Redis distributed cache
+var redisConnection = builder.Configuration.GetConnectionString("Redis") ?? "localhost:6379";
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = redisConnection;
+    options.InstanceName = "TraceLens:";
+});
 builder.Services.AddInfrastructure(builder.Configuration);
 
 var jwtSection = builder.Configuration.GetSection("Jwt");
