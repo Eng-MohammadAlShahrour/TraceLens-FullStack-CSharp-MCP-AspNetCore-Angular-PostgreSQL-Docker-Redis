@@ -22,5 +22,9 @@ export const routes: Routes = [
     path: 'work-orders',
     loadComponent: () => import('./features/work-orders/work-orders').then(m => m.WorkOrders)
   },
+  {
+    path: 'mcp',
+    loadComponent: () => import('./features/mcp-playground/mcp-playground').then(m => m.McpPlayground)
+  },
   { path: '**', redirectTo: 'dashboard' }
 ];

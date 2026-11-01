@@ -13,8 +13,6 @@ builder.Host.UseSerilog((context, config) =>
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
-
-// ── MCP Server ──
 builder.Services
     .AddMcpServer()
     .WithHttpTransport()

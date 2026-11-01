@@ -1,0 +1,117 @@
+﻿<div class="p-4 md:p-8 animate-fade-in">
+  <header class="mb-6 md:mb-8">
+    <div class="flex items-center gap-3 mb-2">
+      <h1 class="text-2xl md:text-3xl font-bold text-ink-100 tracking-tight">MCP Playground</h1>
+      <span class="badge badge-info">3 tools</span>
+    </div>
+    <p class="text-sm text-ink-400">Test the Model Context Protocol server live</p>
+    <p class="text-xs text-ink-400 mt-1 font-mono">POST http://localhost:5268/mcp</p>
+  </header>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+    <!-- LEFT: Tools -->
+    <div class="space-y-4">
+
+      <!-- Tool 1 -->
+      <div class="card">
+        <div class="flex items-start justify-between mb-3 gap-3">
+          <div class="min-w-0">
+            <code class="text-sm font-mono text-brand-600 font-semibold break-all">get_batches_by_status</code>
+            <p class="text-xs text-ink-400 mt-1">Filter batches by lifecycle status</p>
+          </div>
+        </div>
+        <label class="block text-xs font-semibold text-ink-300 uppercase tracking-wider mb-1.5">Status</label>
+        <select [(ngModel)]="batchStatus" class="input mb-3 cursor-pointer">
+          @for (s of statusOptions; track s) {
+            <option [value]="s">{{ s }}</option>
+          }
+        </select>
+        <button (click)="runGetBatchesByStatus()" [disabled]="executing() !== null" class="btn-primary w-full">
+          @if (executing() === 'get_batches_by_status') { Running... } @else { Execute }
+        </button>
+      </div>
+
+      <!-- Tool 2 -->
+      <div class="card">
+        <div class="flex items-start justify-between mb-3 gap-3">
+          <div class="min-w-0">
+            <code class="text-sm font-mono text-brand-600 font-semibold break-all">get_work_orders</code>
+            <p class="text-xs text-ink-400 mt-1">List all production work orders</p>
+          </div>
+        </div>
+        <p class="text-xs text-ink-400 mb-3">No parameters</p>
+        <button (click)="runGetWorkOrders()" [disabled]="executing() !== null" class="btn-primary w-full">
+          @if (executing() === 'get_work_orders') { Running... } @else { Execute }
+        </button>
+      </div>
+
+      <!-- Tool 3 -->
+      <div class="card">
+        <div class="flex items-start justify-between mb-3 gap-3">
+          <div class="min-w-0">
+            <code class="text-sm font-mono text-brand-600 font-semibold break-all">create_batch</code>
+            <p class="text-xs text-ink-400 mt-1">Create a new production batch</p>
+          </div>
+        </div>
+        <div class="space-y-2 mb-3">
+          <input [(ngModel)]="newBatch.batchNumber" placeholder="Batch Number" class="input font-mono text-xs" />
+          <input [(ngModel)]="newBatch.workOrderId" placeholder="Work Order ID (GUID)" class="input font-mono text-xs" />
+          <input [(ngModel)]="newBatch.productId" placeholder="Product ID (GUID)" class="input font-mono text-xs" />
+          <div class="grid grid-cols-2 gap-2">
+            <input [(ngModel)]="newBatch.producedQuantity" type="number" placeholder="Quantity" class="input" />
+            <input [(ngModel)]="newBatch.producedQuantityUnit" placeholder="Unit (pcs)" class="input" />
+          </div>
+        </div>
+        <button (click)="runCreateBatch()" [disabled]="executing() !== null" class="btn-primary w-full">
+          @if (executing() === 'create_batch') { Running... } @else { Execute }
+        </button>
+      </div>
+
+    </div>
+
+    <!-- RIGHT: Output -->
+    <div>
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-sm font-bold text-ink-100 uppercase tracking-wider">Output</h2>
+        @if (calls().length > 0) {
+          <button (click)="clearCalls()" class="text-xs text-ink-400 hover:text-danger">Clear</button>
+        }
+      </div>
+
+      @for (call of calls(); track call.timestamp) {
+        <div class="card mb-3">
+          <div class="flex items-start justify-between mb-2 gap-2">
+            <code class="text-xs font-mono text-brand-600 font-semibold break-all">{{ call.toolName }}</code>
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="text-[10px] text-ink-400">{{ call.timestamp }}</span>
+              @if (call.success) {
+                <span class="text-[10px] text-success font-semibold">{{ call.durationMs }}ms</span>
+              } @else {
+                <span class="text-[10px] text-danger font-semibold">Error</span>
+              }
+            </div>
+          </div>
+
+          @if (call.success) {
+            <pre class="bg-bg rounded-md p-2 text-[10px] font-mono text-ink-300 overflow-x-auto max-h-64 overflow-y-auto">{{ prettyJson(call.data) }}</pre>
+          } @else {
+            <p class="text-xs text-danger">{{ call.error }}</p>
+          }
+        </div>
+      } @empty {
+        <div class="card flex flex-col items-center justify-center py-16 text-center">
+          <div class="w-12 h-12 rounded-full flex items-center justify-center mb-3" style="background: linear-gradient(135deg, rgba(13,148,136,0.1) 0%, rgba(6,182,212,0.1) 100%);">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#0F766E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6">
+              <rect x="3" y="11" width="18" height="10" rx="2"/>
+              <circle cx="12" cy="5" r="2"/>
+              <path d="M12 7v4"/>
+            </svg>
+          </div>
+          <p class="text-sm text-ink-400">Click Execute on any tool to see results</p>
+        </div>
+      }
+    </div>
+
+  </div>
+</div>
